@@ -35,69 +35,69 @@ export function VarianceAnalysis({ session, onBack }: VarianceAnalysisProps) {
         <div className="flex items-center justify-between">
           <div>
             <Button variant="outline" onClick={onBack} className="mb-4">
-              ← Back
+              ← Назад
             </Button>
             <h1 className="text-3xl font-bold">{session.name}</h1>
             <p className="text-muted-foreground">{session.storeName}</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Created {formatDate(session.createdAt)}
+              Создана {formatDate(session.createdAt)}
             </p>
           </div>
           <Button onClick={handleExport}>
             <Download className="mr-2" size={16} />
-            Export CSV
+            Экспорт CSV
           </Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="p-6">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-sm text-muted-foreground">Total Products</div>
+              <div className="text-sm text-muted-foreground">Всего товаров</div>
               <CheckCircle size={20} className="text-muted-foreground" />
             </div>
             <div className="text-3xl font-mono font-bold">{summary.totalProducts}</div>
             <div className="text-sm text-muted-foreground mt-1">
-              {summary.scannedProducts} scanned
+              {summary.scannedProducts} отсканировано
             </div>
           </Card>
 
           <Card className="p-6 bg-destructive/5 border-destructive/20">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-medium text-destructive">Shortage</div>
+              <div className="text-sm font-medium text-destructive">Недостача</div>
               <TrendDown size={20} className="text-destructive" />
             </div>
             <div className="text-3xl font-mono font-bold text-destructive">{summary.shortageCount}</div>
-            <div className="text-sm text-muted-foreground mt-1">items missing</div>
+            <div className="text-sm text-muted-foreground mt-1">товаров не хватает</div>
           </Card>
 
           <Card className="p-6 bg-success/5 border-success/20">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-medium text-success">Surplus</div>
+              <div className="text-sm font-medium text-success">Излишки</div>
               <TrendUp size={20} className="text-success" />
             </div>
             <div className="text-3xl font-mono font-bold text-success">{summary.surplusCount}</div>
-            <div className="text-sm text-muted-foreground mt-1">extra items</div>
+            <div className="text-sm text-muted-foreground mt-1">лишних товаров</div>
           </Card>
 
           <Card className="p-6 bg-warning/5 border-warning/20">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-medium text-warning">Unknown</div>
+              <div className="text-sm font-medium text-warning">Неизвестные</div>
               <Warning size={20} className="text-warning" />
             </div>
             <div className="text-3xl font-mono font-bold text-warning">{summary.unknownCount}</div>
-            <div className="text-sm text-muted-foreground mt-1">not in system</div>
+            <div className="text-sm text-muted-foreground mt-1">нет в системе</div>
           </Card>
         </div>
 
         <Card className="p-6">
           <Tabs value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Variance Details</h2>
+              <h2 className="text-xl font-semibold">Детали расхождений</h2>
               <TabsList>
-                <TabsTrigger value="all">All ({variances.length})</TabsTrigger>
-                <TabsTrigger value="shortage">Shortage ({summary.shortageCount})</TabsTrigger>
-                <TabsTrigger value="surplus">Surplus ({summary.surplusCount})</TabsTrigger>
-                <TabsTrigger value="unknown">Unknown ({summary.unknownCount})</TabsTrigger>
+                <TabsTrigger value="all">Все ({variances.length})</TabsTrigger>
+                <TabsTrigger value="shortage">Недостача ({summary.shortageCount})</TabsTrigger>
+                <TabsTrigger value="surplus">Излишки ({summary.surplusCount})</TabsTrigger>
+                <TabsTrigger value="unknown">Неизв. ({summary.unknownCount})</TabsTrigger>
               </TabsList>
             </div>
 
@@ -106,20 +106,20 @@ export function VarianceAnalysis({ session, onBack }: VarianceAnalysisProps) {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Barcode</TableHead>
-                      <TableHead>Product Name</TableHead>
-                      <TableHead className="text-right">Expected</TableHead>
-                      <TableHead className="text-right">Actual</TableHead>
-                      <TableHead className="text-right">Variance</TableHead>
-                      <TableHead className="text-right">Value</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead>Штрихкод</TableHead>
+                      <TableHead>Название</TableHead>
+                      <TableHead className="text-right">План</TableHead>
+                      <TableHead className="text-right">Факт</TableHead>
+                      <TableHead className="text-right">Разница</TableHead>
+                      <TableHead className="text-right">Сумма</TableHead>
+                      <TableHead>Статус</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredVariances.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                          No items in this category
+                          Нет товаров в этой категории
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -151,7 +151,9 @@ export function VarianceAnalysis({ session, onBack }: VarianceAnalysisProps) {
                               v.varianceType === 'surplus' ? 'default' :
                               v.varianceType === 'unknown' ? 'secondary' : 'outline'
                             }>
-                              {v.varianceType}
+                              {v.varianceType === 'shortage' ? 'недостача' :
+                               v.varianceType === 'surplus' ? 'излишки' :
+                               v.varianceType === 'unknown' ? 'неизвестно' : 'совпадение'}
                             </Badge>
                           </TableCell>
                         </TableRow>

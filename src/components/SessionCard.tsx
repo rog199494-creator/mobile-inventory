@@ -22,9 +22,9 @@ function getStatusColor(status: SessionStatus) {
 
 function getStatusLabel(status: SessionStatus) {
   switch (status) {
-    case 'active': return 'Active'
-    case 'completed': return 'Completed'
-    case 'planned': return 'Planned'
+    case 'active': return 'Активна'
+    case 'completed': return 'Завершена'
+    case 'planned': return 'Запланирована'
   }
 }
 
@@ -51,19 +51,19 @@ export function SessionCard({ session, onView, onScan }: SessionCardProps) {
         <div className="flex items-center gap-2 text-sm">
           <Package className="text-muted-foreground" size={16} />
           <span className="font-mono">{session.products.length}</span>
-          <span className="text-muted-foreground">products</span>
+          <span className="text-muted-foreground">товаров</span>
         </div>
         
         <div className="flex items-center gap-2 text-sm">
           <Barcode className="text-muted-foreground" size={16} />
           <span className="font-mono">{totalScanned}</span>
-          <span className="text-muted-foreground">items scanned</span>
+          <span className="text-muted-foreground">отсканировано</span>
         </div>
 
         {session.status !== 'planned' && (
           <div className="space-y-1">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Progress</span>
+              <span className="text-muted-foreground">Прогресс</span>
               <span className="font-mono font-medium">{Math.round(progress)}%</span>
             </div>
             <Progress value={progress} className="h-2" />
@@ -72,7 +72,7 @@ export function SessionCard({ session, onView, onScan }: SessionCardProps) {
       </div>
 
       <div className="text-xs text-muted-foreground mb-4">
-        Created {formatDate(session.createdAt)}
+        Создана {formatDate(session.createdAt)}
       </div>
 
       <div className="flex gap-2">
@@ -81,7 +81,7 @@ export function SessionCard({ session, onView, onScan }: SessionCardProps) {
           className="flex-1"
           onClick={() => onView(session)}
         >
-          View Details
+          Подробнее
         </Button>
         {session.status === 'active' && (
           <Button 
@@ -89,7 +89,7 @@ export function SessionCard({ session, onView, onScan }: SessionCardProps) {
             onClick={() => onScan(session)}
           >
             <Barcode className="mr-2" size={16} />
-            Scan
+            Сканировать
           </Button>
         )}
       </div>

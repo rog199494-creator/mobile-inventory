@@ -31,23 +31,23 @@ export function NewSessionDialog({ open, onOpenChange, onCreate }: NewSessionDia
     try {
       const parsed = parseExcelData(text)
       setProducts(parsed)
-      toast.success(`Loaded ${parsed.length} products from file`)
+      toast.success(`Загружено ${parsed.length} товаров из файла`)
     } catch (error) {
-      toast.error('Error parsing file. Please check the format.')
+      toast.error('Ошибка при чтении файла. Проверьте формат.')
     }
   }
 
   const handleCreate = () => {
     if (!name.trim()) {
-      toast.error('Please enter a session name')
+      toast.error('Введите название сессии')
       return
     }
     if (!storeName.trim()) {
-      toast.error('Please enter a store name')
+      toast.error('Введите название магазина')
       return
     }
     if (products.length === 0) {
-      toast.error('Please upload a product list')
+      toast.error('Загрузите список товаров')
       return
     }
 
@@ -64,34 +64,34 @@ export function NewSessionDialog({ open, onOpenChange, onCreate }: NewSessionDia
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-2xl">New Inventory Session</DialogTitle>
+          <DialogTitle className="text-2xl">Новая сессия инвентаризации</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div>
-            <Label htmlFor="session-name">Session Name</Label>
+            <Label htmlFor="session-name">Название сессии</Label>
             <Input
               id="session-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Monthly Inventory - Jan 2024"
+              placeholder="Инвентаризация - Январь 2024"
               className="mt-2"
             />
           </div>
 
           <div>
-            <Label htmlFor="store-name">Store/Location</Label>
+            <Label htmlFor="store-name">Магазин/Склад</Label>
             <Input
               id="store-name"
               value={storeName}
               onChange={(e) => setStoreName(e.target.value)}
-              placeholder="Main Warehouse"
+              placeholder="Центральный склад"
               className="mt-2"
             />
           </div>
 
           <div>
-            <Label>Product List (CSV/Excel)</Label>
+            <Label>Список товаров (CSV/Excel)</Label>
             <div className="mt-2">
               <input
                 ref={fileInputRef}
@@ -108,28 +108,28 @@ export function NewSessionDialog({ open, onOpenChange, onCreate }: NewSessionDia
                 <div className="text-center">
                   <Upload size={32} className="mx-auto mb-2 text-muted-foreground" />
                   <div className="text-sm">
-                    {fileName || 'Click to upload CSV'}
+                    {fileName || 'Нажмите для загрузки CSV'}
                   </div>
                   {products.length > 0 && (
                     <div className="text-xs text-success mt-1">
-                      {products.length} products loaded
+                      {products.length} товаров загружено
                     </div>
                   )}
                 </div>
               </Button>
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              Format: Barcode, Name, Expected Qty, Price
+              Формат: Штрихкод, Название, Ожидаемое кол-во, Цена
             </p>
           </div>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            Отмена
           </Button>
           <Button onClick={handleCreate}>
-            Create Session
+            Создать сессию
           </Button>
         </DialogFooter>
       </DialogContent>

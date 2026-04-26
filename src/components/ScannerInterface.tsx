@@ -29,14 +29,14 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
 
   const handleScan = () => {
     if (!barcode.trim()) {
-      toast.error('Please enter a barcode')
+      toast.error('Введите штрихкод')
       return
     }
 
     const product = session.products.find(p => p.barcode === barcode)
     
     onScan(barcode, quantity)
-    setLastScanned(product || { barcode, name: 'Unknown Item', expectedQty: 0, price: 0 })
+    setLastScanned(product || { barcode, name: 'Неизвестный товар', expectedQty: 0, price: 0 })
     setShowConfirm(true)
     
     setTimeout(() => {
@@ -45,7 +45,7 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
       setQuantity(1)
     }, 1500)
 
-    toast.success(`Scanned: ${product?.name || 'Unknown'} (${quantity})`)
+    toast.success(`Отсканировано: ${product?.name || 'Неизвестно'} (${quantity})`)
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -61,18 +61,18 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
       <div className="max-w-2xl mx-auto space-y-4">
         <div className="flex items-center justify-between mb-6">
           <Button variant="outline" onClick={onBack}>
-            ← Back
+            ← Назад
           </Button>
           <Badge variant={isOnline ? 'default' : 'destructive'} className="px-3 py-1">
             {isOnline ? (
               <>
                 <WifiHigh size={14} className="mr-1" />
-                Online
+                Онлайн
               </>
             ) : (
               <>
                 <WifiSlash size={14} className="mr-1" />
-                Offline ({pendingScans} pending)
+                Офлайн ({pendingScans} в очереди)
               </>
             )}
           </Badge>
@@ -84,18 +84,18 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
           
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="p-4 bg-secondary rounded-lg">
-              <div className="text-sm text-muted-foreground mb-1">Total Items</div>
+              <div className="text-sm text-muted-foreground mb-1">Всего позиций</div>
               <div className="text-3xl font-mono font-bold">{totalScanned}</div>
             </div>
             <div className="p-4 bg-secondary rounded-lg">
-              <div className="text-sm text-muted-foreground mb-1">Products</div>
+              <div className="text-sm text-muted-foreground mb-1">Товаров</div>
               <div className="text-3xl font-mono font-bold">{new Set(session.scans.map(s => s.barcode)).size}</div>
             </div>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Barcode</label>
+              <label className="text-sm font-medium mb-2 block">Штрихкод</label>
               <Input
                 ref={inputRef}
                 id="barcode-input"
@@ -103,14 +103,14 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
                 value={barcode}
                 onChange={(e) => setBarcode(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Scan or enter barcode..."
+                placeholder="Отсканируйте или введите штрихкод..."
                 className="text-lg font-mono h-12"
                 disabled={showConfirm}
               />
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Quantity</label>
+              <label className="text-sm font-medium mb-2 block">Количество</label>
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
@@ -146,7 +146,7 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
               disabled={showConfirm}
             >
               <Barcode className="mr-2" size={24} />
-              Record Scan
+              Записать
             </Button>
           </div>
         </Card>
@@ -177,14 +177,14 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
 
         {session.scans.length > 0 && (
           <Card className="p-6">
-            <h3 className="font-semibold mb-4">Recent Scans</h3>
+            <h3 className="font-semibold mb-4">Последние сканирования</h3>
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {session.scans.slice(-10).reverse().map((scan, idx) => {
                 const product = session.products.find(p => p.barcode === scan.barcode)
                 return (
                   <div key={idx} className="flex items-center justify-between p-3 bg-secondary rounded">
                     <div>
-                      <div className="font-medium">{product?.name || 'Unknown Item'}</div>
+                      <div className="font-medium">{product?.name || 'Неизвестный товар'}</div>
                       <div className="text-sm font-mono text-muted-foreground">{scan.barcode}</div>
                     </div>
                     <div className="font-mono font-bold">+{scan.actualQty}</div>

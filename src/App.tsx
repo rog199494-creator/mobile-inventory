@@ -26,15 +26,20 @@ function App() {
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true)
-      toast.success('Back online - syncing data...')
+      toast.success('Связь восстановлена - синхронизация данных...')
     }
     const handleOffline = () => {
       setIsOnline(false)
-      toast.warning('You are offline - scans will be saved locally')
+      toast.warning('Вы работаете оффлайн - сканирования сохраняются локально')
     }
 
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
+
+    if (window.Telegram?.WebApp) {
+      window.Telegram.WebApp.ready()
+      window.Telegram.WebApp.expand()
+    }
 
     return () => {
       window.removeEventListener('online', handleOnline)
@@ -54,7 +59,7 @@ function App() {
     }
 
     setSessions(current => [...(current || []), newSession])
-    toast.success('Session created successfully')
+    toast.success('Сессия создана успешно')
   }
 
   const handleViewSession = (session: InventorySession) => {
@@ -163,12 +168,12 @@ function App() {
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-4xl font-bold tracking-tight">Mobile Inventory</h1>
-                <p className="text-muted-foreground mt-1">Professional stocktaking made simple</p>
+                <h1 className="text-4xl font-bold tracking-tight">Мобильная инвентаризация</h1>
+                <p className="text-muted-foreground mt-1">Профессиональная инвентаризация стала проще</p>
               </div>
               <Button onClick={() => setNewSessionOpen(true)} size="lg">
                 <Plus className="mr-2" size={20} />
-                New Session
+                Новая сессия
               </Button>
             </div>
           </div>
@@ -177,21 +182,21 @@ function App() {
         <div className="container mx-auto px-4 py-8">
           <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)} className="mb-6">
             <TabsList>
-              <TabsTrigger value="all">All Sessions</TabsTrigger>
-              <TabsTrigger value="active">Active</TabsTrigger>
-              <TabsTrigger value="planned">Planned</TabsTrigger>
-              <TabsTrigger value="completed">Completed</TabsTrigger>
+              <TabsTrigger value="all">Все сессии</TabsTrigger>
+              <TabsTrigger value="active">Активные</TabsTrigger>
+              <TabsTrigger value="planned">Запланированные</TabsTrigger>
+              <TabsTrigger value="completed">Завершённые</TabsTrigger>
             </TabsList>
           </Tabs>
 
           {filteredSessions.length === 0 ? (
             <div className="text-center py-16">
               <div className="text-6xl mb-4">📦</div>
-              <h3 className="text-2xl font-semibold mb-2">No sessions yet</h3>
-              <p className="text-muted-foreground mb-6">Create your first inventory session to get started</p>
+              <h3 className="text-2xl font-semibold mb-2">Пока нет сессий</h3>
+              <p className="text-muted-foreground mb-6">Создайте первую сессию инвентаризации для начала работы</p>
               <Button onClick={() => setNewSessionOpen(true)}>
                 <Plus className="mr-2" size={16} />
-                Create Session
+                Создать сессию
               </Button>
             </div>
           ) : (
