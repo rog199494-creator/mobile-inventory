@@ -180,60 +180,60 @@ function App() {
 
   return (
     <>
-      <div className="min-h-screen bg-background">
-        <div className="border-b bg-card">
-          <div className="container mx-auto px-4 py-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-4xl font-bold tracking-tight">Мобильная инвентаризация</h1>
-                <p className="text-muted-foreground mt-1">Профессиональная инвентаризация стала проще</p>
-              </div>
-              <div className="flex gap-2">
+      <div className="min-h-screen bg-background pb-safe">
+        <div className="border-b bg-card sticky top-0 z-10 shadow-sm">
+          <div className="px-3 py-3 sm:px-4 sm:py-4">
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight truncate">Мобильная инвентаризация</h1>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 hidden sm:block">Профессиональная инвентаризация стала проще</p>
+                </div>
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="lg">
-                      <Info className="mr-2" size={20} />
-                      Как работает
+                    <Button variant="outline" size="sm" className="ml-2 shrink-0">
+                      <Info size={18} />
+                      <span className="hidden sm:inline ml-2">Как работает</span>
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                  <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[85vh] overflow-y-auto">
                     <DialogHeader>
-                      <DialogTitle className="text-2xl">Пошаговая инструкция</DialogTitle>
+                      <DialogTitle className="text-lg sm:text-2xl">Пошаговая инструкция</DialogTitle>
                     </DialogHeader>
                     <ProcessGuide />
                   </DialogContent>
                 </Dialog>
-                <Button onClick={() => setNewSessionOpen(true)} size="lg">
-                  <Plus className="mr-2" size={20} />
-                  Новая сессия
-                </Button>
               </div>
+              <Button onClick={() => setNewSessionOpen(true)} size="default" className="w-full sm:w-auto">
+                <Plus className="mr-2" size={20} />
+                Новая сессия
+              </Button>
             </div>
           </div>
         </div>
 
-        <div className="container mx-auto px-4 py-8">
-          <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)} className="mb-6">
-            <TabsList>
-              <TabsTrigger value="all">Все сессии</TabsTrigger>
-              <TabsTrigger value="active">Активные</TabsTrigger>
-              <TabsTrigger value="planned">Запланированные</TabsTrigger>
-              <TabsTrigger value="completed">Завершённые</TabsTrigger>
+        <div className="px-3 py-4 sm:px-4 sm:py-6">
+          <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)} className="mb-4 sm:mb-6">
+            <TabsList className="w-full grid grid-cols-2 sm:grid-cols-4 h-auto">
+              <TabsTrigger value="all" className="text-xs sm:text-sm py-2">Все</TabsTrigger>
+              <TabsTrigger value="active" className="text-xs sm:text-sm py-2">Активные</TabsTrigger>
+              <TabsTrigger value="planned" className="text-xs sm:text-sm py-2">Планы</TabsTrigger>
+              <TabsTrigger value="completed" className="text-xs sm:text-sm py-2">Готово</TabsTrigger>
             </TabsList>
           </Tabs>
 
           {filteredSessions.length === 0 ? (
-            <div className="text-center py-16">
-              <div className="text-6xl mb-4">📦</div>
-              <h3 className="text-2xl font-semibold mb-2">Пока нет сессий</h3>
-              <p className="text-muted-foreground mb-6">Создайте первую сессию инвентаризации для начала работы</p>
-              <Button onClick={() => setNewSessionOpen(true)}>
+            <div className="text-center py-12 sm:py-16 px-4">
+              <div className="text-5xl sm:text-6xl mb-4">📦</div>
+              <h3 className="text-xl sm:text-2xl font-semibold mb-2">Пока нет сессий</h3>
+              <p className="text-sm sm:text-base text-muted-foreground mb-6">Создайте первую сессию инвентаризации для начала работы</p>
+              <Button onClick={() => setNewSessionOpen(true)} size="lg" className="w-full sm:w-auto">
                 <Plus className="mr-2" size={16} />
                 Создать сессию
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
               {filteredSessions.map(session => (
                 <SessionCard
                   key={session.id}

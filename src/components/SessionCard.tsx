@@ -36,33 +36,33 @@ export function SessionCard({ session, onView, onScan }: SessionCardProps) {
   const totalScanned = session.scans.reduce((sum, s) => sum + s.actualQty, 0)
 
   return (
-    <Card className="p-6 hover:shadow-lg transition-shadow">
-      <div className="flex items-start justify-between mb-4">
-        <div>
-          <h3 className="text-lg font-semibold mb-1">{session.name}</h3>
-          <p className="text-sm text-muted-foreground">{session.storeName}</p>
+    <Card className="p-4 sm:p-5 hover:shadow-lg transition-shadow active:scale-[0.98]">
+      <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
+        <div className="flex-1 min-w-0">
+          <h3 className="text-base sm:text-lg font-semibold mb-1 truncate">{session.name}</h3>
+          <p className="text-xs sm:text-sm text-muted-foreground truncate">{session.storeName}</p>
         </div>
-        <Badge className={getStatusColor(session.status)}>
+        <Badge className={`${getStatusColor(session.status)} shrink-0 text-xs`}>
           {getStatusLabel(session.status)}
         </Badge>
       </div>
 
-      <div className="space-y-3 mb-4">
-        <div className="flex items-center gap-2 text-sm">
-          <Package className="text-muted-foreground" size={16} />
+      <div className="space-y-2 sm:space-y-3 mb-3 sm:mb-4">
+        <div className="flex items-center gap-2 text-xs sm:text-sm">
+          <Package className="text-muted-foreground shrink-0" size={16} />
           <span className="font-mono">{session.products.length}</span>
           <span className="text-muted-foreground">товаров</span>
         </div>
         
-        <div className="flex items-center gap-2 text-sm">
-          <Barcode className="text-muted-foreground" size={16} />
+        <div className="flex items-center gap-2 text-xs sm:text-sm">
+          <Barcode className="text-muted-foreground shrink-0" size={16} />
           <span className="font-mono">{totalScanned}</span>
           <span className="text-muted-foreground">отсканировано</span>
         </div>
 
         {session.status !== 'planned' && (
           <div className="space-y-1">
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between text-xs sm:text-sm">
               <span className="text-muted-foreground">Прогресс</span>
               <span className="font-mono font-medium">{Math.round(progress)}%</span>
             </div>
@@ -71,21 +71,21 @@ export function SessionCard({ session, onView, onScan }: SessionCardProps) {
         )}
       </div>
 
-      <div className="text-xs text-muted-foreground mb-4">
+      <div className="text-xs text-muted-foreground mb-3 sm:mb-4">
         Создана {formatDate(session.createdAt)}
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row gap-2">
         <Button 
           variant="outline" 
-          className="flex-1"
+          className="flex-1 h-10 sm:h-9"
           onClick={() => onView(session)}
         >
           Подробнее
         </Button>
         {(session.status === 'active' || session.status === 'planned') && (
           <Button 
-            className="flex-1"
+            className="flex-1 h-10 sm:h-9"
             onClick={() => onScan(session)}
           >
             <Barcode className="mr-2" size={16} />

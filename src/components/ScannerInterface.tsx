@@ -87,75 +87,79 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
   const totalScanned = session.scans.reduce((sum, s) => sum + s.actualQty, 0)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5 p-4">
-      <div className="max-w-2xl mx-auto space-y-4">
-        <div className="flex items-center justify-between mb-6">
-          <Button variant="outline" onClick={onBack}>
-            <ArrowLeft className="mr-2" size={16} />
-            Назад
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5">
+      <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b px-3 py-2 sm:px-4 sm:py-3 shadow-sm">
+        <div className="flex items-center justify-between">
+          <Button variant="outline" size="sm" onClick={onBack}>
+            <ArrowLeft className="mr-1 sm:mr-2" size={16} />
+            <span className="hidden sm:inline">Назад</span>
           </Button>
-          <Badge variant={isOnline ? 'default' : 'destructive'} className="px-3 py-1">
+          <Badge variant={isOnline ? 'default' : 'destructive'} className="px-2 py-1 text-xs sm:px-3">
             {isOnline ? (
               <>
                 <WifiHigh size={14} className="mr-1" />
-                Онлайн
+                <span className="hidden sm:inline">Онлайн</span>
               </>
             ) : (
               <>
                 <WifiSlash size={14} className="mr-1" />
-                Офлайн ({pendingScans} в очереди)
+                <span className="hidden sm:inline">Офлайн</span> ({pendingScans})
               </>
             )}
           </Badge>
         </div>
+      </div>
 
-        <Card className="p-4 bg-card/80 backdrop-blur-sm">
+      <div className="px-3 py-3 sm:px-4 sm:py-4 space-y-3 sm:space-y-4 max-w-2xl mx-auto pb-safe">
+        <Card className="p-3 sm:p-4 bg-card/80 backdrop-blur-sm">
           <StepIndicator steps={SCANNER_STEPS} currentStep={currentStep} />
         </Card>
 
-        <Card className="p-6">
-          <h2 className="text-2xl font-bold mb-2">{session.name}</h2>
-          <p className="text-muted-foreground mb-4">{session.storeName}</p>
+        <Card className="p-4 sm:p-5 md:p-6">
+          <h2 className="text-xl sm:text-2xl font-bold mb-1">{session.name}</h2>
+          <p className="text-sm text-muted-foreground mb-4">{session.storeName}</p>
           
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="p-4 bg-secondary rounded-lg">
-              <div className="text-sm text-muted-foreground mb-1">Всего позиций</div>
-              <div className="text-3xl font-mono font-bold">{totalScanned}</div>
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <div className="p-3 sm:p-4 bg-secondary rounded-lg">
+              <div className="text-xs sm:text-sm text-muted-foreground mb-1">Всего позиций</div>
+              <div className="text-2xl sm:text-3xl font-mono font-bold">{totalScanned}</div>
             </div>
-            <div className="p-4 bg-secondary rounded-lg">
-              <div className="text-sm text-muted-foreground mb-1">Товаров</div>
-              <div className="text-3xl font-mono font-bold">{new Set(session.scans.map(s => s.barcode)).size}</div>
+            <div className="p-3 sm:p-4 bg-secondary rounded-lg">
+              <div className="text-xs sm:text-sm text-muted-foreground mb-1">Товаров</div>
+              <div className="text-2xl sm:text-3xl font-mono font-bold">{new Set(session.scans.map(s => s.barcode)).size}</div>
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Количество</label>
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="icon"
+                  className="h-12 w-12 sm:h-10 sm:w-10 shrink-0"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   disabled={showConfirm || isCameraActive}
                 >
-                  <Minus />
+                  <Minus size={20} />
                 </Button>
                 <Input
                   id="quantity-input"
                   type="number"
                   value={quantity}
                   onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                  className="text-center text-xl font-mono font-bold h-12"
+                  className="text-center text-xl sm:text-2xl font-mono font-bold h-12 sm:h-14"
                   disabled={showConfirm || isCameraActive}
                   min="1"
                 />
                 <Button
                   variant="outline"
                   size="icon"
+                  className="h-12 w-12 sm:h-10 sm:w-10 shrink-0"
                   onClick={() => setQuantity(quantity + 1)}
                   disabled={showConfirm || isCameraActive}
                 >
-                  <Plus />
+                  <Plus size={20} />
                 </Button>
               </div>
             </div>
@@ -185,13 +189,13 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
                 onChange={(e) => setBarcode(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Введите штрихкод..."
-                className="text-lg font-mono h-12"
+                className="text-base sm:text-lg font-mono h-12 sm:h-14"
                 disabled={showConfirm || isCameraActive}
               />
             </div>
 
             <Button
-              className="w-full h-14 text-lg"
+              className="w-full h-12 sm:h-14 text-base sm:text-lg"
               onClick={() => handleScan(undefined)}
               disabled={showConfirm || isCameraActive}
             >
@@ -209,16 +213,16 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
               exit={{ opacity: 0, y: -20, scale: 0.9 }}
               transition={{ duration: 0.2 }}
             >
-              <Card className="p-6 bg-success/10 border-success">
+              <Card className="p-4 sm:p-5 md:p-6 bg-success/10 border-success">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 bg-success rounded-full flex items-center justify-center">
-                    <Check size={24} className="text-success-foreground" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-success rounded-full flex items-center justify-center shrink-0">
+                    <Check size={20} className="text-success-foreground sm:w-6 sm:h-6" />
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-lg">{lastScanned.name}</h3>
-                    <p className="text-sm font-mono text-muted-foreground">{lastScanned.barcode}</p>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-base sm:text-lg truncate">{lastScanned.name}</h3>
+                    <p className="text-xs sm:text-sm font-mono text-muted-foreground truncate">{lastScanned.barcode}</p>
                   </div>
-                  <div className="text-3xl font-mono font-bold text-success">+{quantity}</div>
+                  <div className="text-2xl sm:text-3xl font-mono font-bold text-success shrink-0">+{quantity}</div>
                 </div>
               </Card>
             </motion.div>
@@ -226,18 +230,18 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
         </AnimatePresence>
 
         {session.scans.length > 0 && (
-          <Card className="p-6">
-            <h3 className="font-semibold mb-4">Последние сканирования</h3>
-            <div className="space-y-2 max-h-64 overflow-y-auto">
+          <Card className="p-4 sm:p-5 md:p-6">
+            <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Последние сканирования</h3>
+            <div className="space-y-2 max-h-48 sm:max-h-64 overflow-y-auto">
               {session.scans.slice(-10).reverse().map((scan, idx) => {
                 const product = session.products.find(p => p.barcode === scan.barcode)
                 return (
-                  <div key={idx} className="flex items-center justify-between p-3 bg-secondary rounded">
-                    <div>
-                      <div className="font-medium">{product?.name || 'Неизвестный товар'}</div>
-                      <div className="text-sm font-mono text-muted-foreground">{scan.barcode}</div>
+                  <div key={idx} className="flex items-center justify-between p-2 sm:p-3 bg-secondary rounded gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm sm:text-base truncate">{product?.name || 'Неизвестный товар'}</div>
+                      <div className="text-xs sm:text-sm font-mono text-muted-foreground truncate">{scan.barcode}</div>
                     </div>
-                    <div className="font-mono font-bold">+{scan.actualQty}</div>
+                    <div className="font-mono font-bold text-sm sm:text-base shrink-0">+{scan.actualQty}</div>
                   </div>
                 )
               })}

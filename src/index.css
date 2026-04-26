@@ -6,13 +6,32 @@
     @apply border-border
   }
   
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+  
   body {
     font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+    @apply bg-background text-foreground;
+    overscroll-behavior: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   
   .font-mono {
     font-family: 'JetBrains Mono', 'Courier New', monospace;
     font-variant-numeric: tabular-nums;
+  }
+
+  @supports (padding: env(safe-area-inset-bottom)) {
+    .pb-safe {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    
+    .pt-safe {
+      padding-top: env(safe-area-inset-top);
+    }
   }
 }
 

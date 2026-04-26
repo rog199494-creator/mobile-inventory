@@ -64,116 +64,124 @@ export function VarianceAnalysis({ session, onBack, onComplete }: VarianceAnalys
   const isCompleted = session.status === 'completed'
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <Button variant="outline" onClick={onBack} className="mb-4">
-              ← Назад
-            </Button>
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold">{session.name}</h1>
-              {isCompleted && (
-                <Badge className="bg-muted text-muted-foreground">
-                  <Lock className="mr-1" size={14} />
-                  Завершена
-                </Badge>
-              )}
+    <div className="min-h-screen bg-background">
+      <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b px-3 py-3 sm:px-4 sm:py-4 shadow-sm">
+        <Button variant="outline" size="sm" onClick={onBack} className="mb-3">
+          ← Назад
+        </Button>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold truncate">{session.name}</h1>
+                {isCompleted && (
+                  <Badge className="bg-muted text-muted-foreground shrink-0 text-xs">
+                    <Lock className="mr-1" size={12} />
+                    <span className="hidden sm:inline">Завершена</span>
+                  </Badge>
+                )}
+              </div>
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">{session.storeName}</p>
+              <p className="text-xs text-muted-foreground mt-0.5 hidden sm:block">
+                Создана {formatDate(session.createdAt)}
+                {session.completedAt && ` • Завершена ${formatDate(session.completedAt)}`}
+              </p>
             </div>
-            <p className="text-muted-foreground">{session.storeName}</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Создана {formatDate(session.createdAt)}
-              {session.completedAt && ` • Завершена ${formatDate(session.completedAt)}`}
-            </p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleExportCSV}>
-              <Download className="mr-2" size={16} />
-              CSV
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={handleExportCSV} className="flex-1 sm:flex-none">
+              <Download className="mr-1 sm:mr-2" size={16} />
+              <span className="hidden sm:inline">CSV</span>
+              <span className="sm:hidden">CSV</span>
             </Button>
-            <Button variant="outline" onClick={handleExportExcel}>
-              <FileXls className="mr-2" size={16} />
-              Excel
+            <Button variant="outline" size="sm" onClick={handleExportExcel} className="flex-1 sm:flex-none">
+              <FileXls className="mr-1 sm:mr-2" size={16} />
+              <span className="hidden sm:inline">Excel</span>
+              <span className="sm:hidden">Excel</span>
             </Button>
             {!isCompleted && (
-              <Button onClick={() => setShowCompleteDialog(true)}>
-                <Lock className="mr-2" size={16} />
-                Завершить сессию
+              <Button size="sm" onClick={() => setShowCompleteDialog(true)} className="flex-1 sm:flex-none">
+                <Lock className="mr-1 sm:mr-2" size={16} />
+                <span className="hidden sm:inline">Завершить сессию</span>
+                <span className="sm:hidden">Завершить</span>
               </Button>
             )}
           </div>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm text-muted-foreground">Всего товаров</div>
-              <CheckCircle size={20} className="text-muted-foreground" />
+      <div className="px-3 py-4 sm:px-4 sm:py-6 space-y-4 sm:space-y-6 max-w-7xl mx-auto pb-safe">
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
+          <Card className="p-3 sm:p-4 md:p-5">
+            <div className="flex items-center justify-between mb-1 sm:mb-2">
+              <div className="text-xs sm:text-sm text-muted-foreground">Всего</div>
+              <CheckCircle size={16} className="text-muted-foreground sm:w-5 sm:h-5" />
             </div>
-            <div className="text-3xl font-mono font-bold">{summary.totalProducts}</div>
-            <div className="text-sm text-muted-foreground mt-1">
-              {summary.scannedProducts} отсканировано
+            <div className="text-xl sm:text-2xl md:text-3xl font-mono font-bold">{summary.totalProducts}</div>
+            <div className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
+              {summary.scannedProducts} отскан.
             </div>
           </Card>
 
-          <Card className="p-6 bg-destructive/5 border-destructive/20">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-medium text-destructive">Недостача</div>
-              <TrendDown size={20} className="text-destructive" />
+          <Card className="p-3 sm:p-4 md:p-5 bg-destructive/5 border-destructive/20">
+            <div className="flex items-center justify-between mb-1 sm:mb-2">
+              <div className="text-xs sm:text-sm font-medium text-destructive">Недостача</div>
+              <TrendDown size={16} className="text-destructive sm:w-5 sm:h-5" />
             </div>
-            <div className="text-3xl font-mono font-bold text-destructive">{summary.shortageCount}</div>
-            <div className="text-sm text-muted-foreground mt-1">товаров не хватает</div>
+            <div className="text-xl sm:text-2xl md:text-3xl font-mono font-bold text-destructive">{summary.shortageCount}</div>
+            <div className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">не хватает</div>
           </Card>
 
-          <Card className="p-6 bg-success/5 border-success/20">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-medium text-success">Излишки</div>
-              <TrendUp size={20} className="text-success" />
+          <Card className="p-3 sm:p-4 md:p-5 bg-success/5 border-success/20">
+            <div className="flex items-center justify-between mb-1 sm:mb-2">
+              <div className="text-xs sm:text-sm font-medium text-success">Излишки</div>
+              <TrendUp size={16} className="text-success sm:w-5 sm:h-5" />
             </div>
-            <div className="text-3xl font-mono font-bold text-success">{summary.surplusCount}</div>
-            <div className="text-sm text-muted-foreground mt-1">лишних товаров</div>
+            <div className="text-xl sm:text-2xl md:text-3xl font-mono font-bold text-success">{summary.surplusCount}</div>
+            <div className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">лишних</div>
           </Card>
 
-          <Card className="p-6 bg-warning/5 border-warning/20">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-medium text-warning">Неизвестные</div>
-              <Warning size={20} className="text-warning" />
+          <Card className="p-3 sm:p-4 md:p-5 bg-warning/5 border-warning/20">
+            <div className="flex items-center justify-between mb-1 sm:mb-2">
+              <div className="text-xs sm:text-sm font-medium text-warning">Неизв.</div>
+              <Warning size={16} className="text-warning sm:w-5 sm:h-5" />
             </div>
-            <div className="text-3xl font-mono font-bold text-warning">{summary.unknownCount}</div>
-            <div className="text-sm text-muted-foreground mt-1">нет в системе</div>
+            <div className="text-xl sm:text-2xl md:text-3xl font-mono font-bold text-warning">{summary.unknownCount}</div>
+            <div className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">нет в БД</div>
           </Card>
         </div>
 
-        <Card className="p-6">
+        <Card className="p-3 sm:p-4 md:p-6">
           <Tabs value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Детали расхождений</h2>
-              <TabsList>
-                <TabsTrigger value="all">Все ({variances.length})</TabsTrigger>
-                <TabsTrigger value="shortage">Недостача ({summary.shortageCount})</TabsTrigger>
-                <TabsTrigger value="surplus">Излишки ({summary.surplusCount})</TabsTrigger>
-                <TabsTrigger value="unknown">Неизв. ({summary.unknownCount})</TabsTrigger>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3 sm:mb-4">
+              <h2 className="text-base sm:text-lg md:text-xl font-semibold">Детали расхождений</h2>
+              <TabsList className="grid grid-cols-2 sm:flex w-full sm:w-auto">
+                <TabsTrigger value="all" className="text-xs sm:text-sm">Все ({variances.length})</TabsTrigger>
+                <TabsTrigger value="shortage" className="text-xs sm:text-sm">Недост. ({summary.shortageCount})</TabsTrigger>
+                <TabsTrigger value="surplus" className="text-xs sm:text-sm">Изл. ({summary.surplusCount})</TabsTrigger>
+                <TabsTrigger value="unknown" className="text-xs sm:text-sm">Неизв. ({summary.unknownCount})</TabsTrigger>
               </TabsList>
             </div>
 
             <TabsContent value={filter} className="mt-0">
-              <div className="border rounded-lg overflow-hidden">
+              <div className="border rounded-lg overflow-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Штрихкод</TableHead>
-                      <TableHead>Название</TableHead>
-                      <TableHead className="text-right">План</TableHead>
-                      <TableHead className="text-right">Факт</TableHead>
-                      <TableHead className="text-right">Разница</TableHead>
-                      <TableHead className="text-right">Сумма</TableHead>
-                      <TableHead>Статус</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Штрихкод</TableHead>
+                      <TableHead className="text-xs sm:text-sm min-w-[120px]">Название</TableHead>
+                      <TableHead className="text-right text-xs sm:text-sm">План</TableHead>
+                      <TableHead className="text-right text-xs sm:text-sm">Факт</TableHead>
+                      <TableHead className="text-right text-xs sm:text-sm">Разн.</TableHead>
+                      <TableHead className="text-right text-xs sm:text-sm hidden sm:table-cell">Сумма</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Статус</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredVariances.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                        <TableCell colSpan={7} className="text-center text-muted-foreground py-6 sm:py-8 text-sm">
                           Нет товаров в этой категории
                         </TableCell>
                       </TableRow>
@@ -184,17 +192,17 @@ export function VarianceAnalysis({ session, onBack, onComplete }: VarianceAnalys
                           v.varianceType === 'surplus' ? 'bg-success/5' :
                           v.varianceType === 'unknown' ? 'bg-warning/5' : ''
                         }>
-                          <TableCell className="font-mono text-sm">{v.barcode}</TableCell>
-                          <TableCell className="font-medium">{v.name}</TableCell>
-                          <TableCell className="text-right font-mono">{formatNumber(v.expectedQty)}</TableCell>
-                          <TableCell className="text-right font-mono">{formatNumber(v.actualQty)}</TableCell>
-                          <TableCell className={`text-right font-mono font-bold ${
+                          <TableCell className="font-mono text-xs sm:text-sm">{v.barcode}</TableCell>
+                          <TableCell className="font-medium text-xs sm:text-sm">{v.name}</TableCell>
+                          <TableCell className="text-right font-mono text-xs sm:text-sm">{formatNumber(v.expectedQty)}</TableCell>
+                          <TableCell className="text-right font-mono text-xs sm:text-sm">{formatNumber(v.actualQty)}</TableCell>
+                          <TableCell className={`text-right font-mono font-bold text-xs sm:text-sm ${
                             v.variance > 0 ? 'text-success' :
                             v.variance < 0 ? 'text-destructive' : 'text-muted-foreground'
                           }`}>
                             {v.variance > 0 ? '+' : ''}{formatNumber(v.variance)}
                           </TableCell>
-                          <TableCell className={`text-right font-mono ${
+                          <TableCell className={`text-right font-mono text-xs sm:text-sm hidden sm:table-cell ${
                             v.varianceValue > 0 ? 'text-success' :
                             v.varianceValue < 0 ? 'text-destructive' : 'text-muted-foreground'
                           }`}>
@@ -205,10 +213,10 @@ export function VarianceAnalysis({ session, onBack, onComplete }: VarianceAnalys
                               v.varianceType === 'shortage' ? 'destructive' :
                               v.varianceType === 'surplus' ? 'default' :
                               v.varianceType === 'unknown' ? 'secondary' : 'outline'
-                            }>
-                              {v.varianceType === 'shortage' ? 'недостача' :
-                               v.varianceType === 'surplus' ? 'излишки' :
-                               v.varianceType === 'unknown' ? 'неизвестно' : 'совпадение'}
+                            } className="text-xs whitespace-nowrap">
+                              {v.varianceType === 'shortage' ? 'недост.' :
+                               v.varianceType === 'surplus' ? 'излиш.' :
+                               v.varianceType === 'unknown' ? 'неизв.' : 'совп.'}
                             </Badge>
                           </TableCell>
                         </TableRow>

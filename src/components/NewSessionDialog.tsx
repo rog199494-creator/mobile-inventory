@@ -97,31 +97,31 @@ export function NewSessionDialog({ open, onOpenChange, onCreate }: NewSessionDia
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Новая сессия инвентаризации</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl md:text-2xl">Новая сессия инвентаризации</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="space-y-3 sm:space-y-4 py-3 sm:py-4">
           <div>
-            <Label htmlFor="session-name">Название сессии</Label>
+            <Label htmlFor="session-name" className="text-sm">Название сессии</Label>
             <Input
               id="session-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Инвентаризация - Январь 2024"
-              className="mt-2"
+              className="mt-1.5 sm:mt-2 h-11 sm:h-10 text-base sm:text-sm"
             />
           </div>
 
           <div>
-            <Label htmlFor="store-name">Магазин/Склад</Label>
+            <Label htmlFor="store-name" className="text-sm">Магазин/Склад</Label>
             <Input
               id="store-name"
               value={storeName}
               onChange={(e) => setStoreName(e.target.value)}
               placeholder="Центральный склад"
-              className="mt-2"
+              className="mt-1.5 sm:mt-2 h-11 sm:h-10 text-base sm:text-sm"
               disabled={isLoadingStore}
             />
             {storeId && (
@@ -132,24 +132,25 @@ export function NewSessionDialog({ open, onOpenChange, onCreate }: NewSessionDia
           </div>
 
           {isTelegram && (
-            <div className="border-t pt-4">
-              <Label htmlFor="store-app-url">Выбор из мини-аппа Telegram</Label>
-              <div className="space-y-2 mt-2">
+            <div className="border-t pt-3 sm:pt-4">
+              <Label htmlFor="store-app-url" className="text-sm">Выбор из мини-аппа Telegram</Label>
+              <div className="space-y-2 mt-1.5 sm:mt-2">
                 <Input
                   id="store-app-url"
                   value={storeAppUrl || ''}
                   onChange={(e) => setStoreAppUrl(e.target.value)}
                   placeholder="https://t.me/your_store_bot/app"
                   disabled={isLoadingStore}
+                  className="h-11 sm:h-10 text-base sm:text-sm"
                 />
                 <Button
                   variant="outline"
                   onClick={handleSelectStoreFromApp}
                   disabled={isLoadingStore || !(storeAppUrl || '').trim()}
-                  className="w-full"
+                  className="w-full h-11 sm:h-10"
                 >
-                  <Storefront className="mr-2" size={20} />
-                  {isLoadingStore ? 'Ожидание выбора...' : 'Выбрать магазин из приложения'}
+                  <Storefront className="mr-2" size={18} />
+                  <span className="text-sm sm:text-base">{isLoadingStore ? 'Ожидание выбора...' : 'Выбрать магазин'}</span>
                 </Button>
                 <p className="text-xs text-muted-foreground">
                   Откроется другое мини-приложение для выбора магазина
@@ -158,9 +159,9 @@ export function NewSessionDialog({ open, onOpenChange, onCreate }: NewSessionDia
             </div>
           )}
 
-          <div className="border-t pt-4">
-            <Label>Список товаров (CSV/Excel)</Label>
-            <div className="mt-2">
+          <div className="border-t pt-3 sm:pt-4">
+            <Label className="text-sm">Список товаров (CSV/Excel)</Label>
+            <div className="mt-1.5 sm:mt-2">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -171,11 +172,11 @@ export function NewSessionDialog({ open, onOpenChange, onCreate }: NewSessionDia
               <Button
                 variant="outline"
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full h-24 border-dashed"
+                className="w-full h-20 sm:h-24 border-dashed"
               >
                 <div className="text-center">
-                  <Upload size={32} className="mx-auto mb-2 text-muted-foreground" />
-                  <div className="text-sm">
+                  <Upload size={28} className="mx-auto mb-1.5 sm:mb-2 text-muted-foreground sm:w-8 sm:h-8" />
+                  <div className="text-xs sm:text-sm">
                     {fileName || 'Нажмите для загрузки CSV'}
                   </div>
                   {products.length > 0 && (
@@ -192,11 +193,11 @@ export function NewSessionDialog({ open, onOpenChange, onCreate }: NewSessionDia
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto h-11 sm:h-10">
             Отмена
           </Button>
-          <Button onClick={handleCreate}>
+          <Button onClick={handleCreate} className="w-full sm:w-auto h-11 sm:h-10">
             Создать сессию
           </Button>
         </DialogFooter>
