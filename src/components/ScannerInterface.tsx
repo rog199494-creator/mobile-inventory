@@ -33,11 +33,17 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
   const [barcode, setBarcode] = useState('')
   const [quantity, setQuantity] = useState(1)
   const [lastScanned, setLastScanned] = useState<ProductReference | null>(null)
+  const [lastScannedQuantity, setLastScannedQuantity] = useState(1)
   const [showConfirm, setShowConfirm] = useState(false)
   const [isCameraActive, setIsCameraActive] = useState(true)
   const [currentStep, setCurrentStep] = useState(1)
   const [deletedScans, setDeletedScans] = useKV<ScanRecord[]>(`deleted-scans-${session.id}`, [])
   const inputRef = useRef<HTMLInputElement>(null)
+  const quantityRef = useRef(1)
+
+  useEffect(() => {
+    quantityRef.current = quantity
+  }, [quantity])
 
   useEffect(() => {
     if (session.scans.length === 0) {
@@ -61,6 +67,7 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
 
   const handleScan = (scannedBarcode?: string) => {
     const codeToScan = scannedBarcode || barcode
+    const currentQuantity = quantityRef.current
 
     if (!codeToScan.trim()) {
       toast.error('Введите штрихкод')
@@ -69,8 +76,9 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
 
     const product = session.products.find(p => p.barcode === codeToScan)
     
-    onScan(codeToScan, quantity)
+    onScan(codeToScan, currentQuantity)
     setLastScanned(product || { barcode: codeToScan, name: 'Неизвестный товар', expectedQty: 0, price: 0 })
+    setLastScannedQuantity(currentQuantity)
     setShowConfirm(true)
     
     setTimeout(() => {
@@ -79,14 +87,16 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
       setQuantity(1)
     }, 1500)
 
-    toast.success(`Отсканировано: ${product?.name || 'Неизвестно'} (${quantity})`)
+    toast.success(`Отсканировано: ${product?.name || 'Неизвестно'} (${currentQuantity})`)
   }
 
   const handleCameraScan = (scannedBarcode: string) => {
+    const currentQuantity = quantityRef.current
     const product = session.products.find(p => p.barcode === scannedBarcode)
     
-    onScan(scannedBarcode, quantity)
+    onScan(scannedBarcode, currentQuantity)
     setLastScanned(product || { barcode: scannedBarcode, name: 'Неизвестный товар', expectedQty: 0, price: 0 })
+    setLastScannedQuantity(currentQuantity)
     
     setIsCameraActive(false)
     setShowConfirm(true)
@@ -97,7 +107,7 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
       setQuantity(1)
     }, 2000)
 
-    toast.success(`Отсканировано: ${product?.name || 'Неизвестно'} (${quantity})`)
+    toast.success(`Отсканировано: ${product?.name || 'Неизвестно'} (${currentQuantity})`)
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -325,7 +335,7 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
                     <h3 className="font-bold text-base sm:text-lg truncate">{lastScanned.name}</h3>
                     <p className="text-xs sm:text-sm font-mono text-muted-foreground truncate">{lastScanned.barcode}</p>
                   </div>
-                  <div className="text-2xl sm:text-3xl font-mono font-bold text-success shrink-0">+{quantity}</div>
+                  <div className="text-2xl sm:text-3xl font-mono font-bold text-success shrink-0">+{lastScannedQuantity}</div>
                 </div>
               </Card>
             </motion.div>
