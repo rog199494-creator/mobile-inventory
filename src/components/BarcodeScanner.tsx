@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import { Html5Qrcode } from 'html5-qrcode'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Camera, X, Lightbulb, LightbulbFilament } from '@phosphor-icons/react'
+import { Camera, X, Lightbulb, LightbulbFilament, MagnifyingGlassMinus, MagnifyingGlassPlus } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { useKV } from '@github/spark/hooks'
+import { Slider } from '@/components/ui/slider'
 import {
   Select,
   SelectContent,
@@ -20,6 +21,7 @@ interface BarcodeScannerProps {
 }
 
 type FlashlightMode = 'auto' | 'on' | 'off'
+type ScanMode = 'standard' | 'wide' | 'precise'
 
 export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerProps) {
   const [scanner, setScanner] = useState<Html5Qrcode | null>(null)
@@ -28,10 +30,15 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
   const [flashlightMode, setFlashlightMode] = useKV<FlashlightMode>('flashlight-mode', 'auto')
   const [isFlashlightOn, setIsFlashlightOn] = useState(false)
   const [brightness, setBrightness] = useState(100)
+  const [zoomLevel, setZoomLevel] = useState(1)
+  const [maxZoom, setMaxZoom] = useState(3)
+  const [scanMode, setScanMode] = useKV<ScanMode>('scan-mode', 'standard')
   const scannerRef = useRef<Html5Qrcode | null>(null)
   const videoTrackRef = useRef<MediaStreamTrack | null>(null)
   const elementId = 'barcode-scanner-view'
   const brightnessCheckInterval = useRef<number | null>(null)
+  const lastScanTime = useRef<number>(0)
+  const scanCooldown = 500
 
   useEffect(() => {
     if (isActive && !scanner) {
@@ -68,6 +75,20 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
     }
   }, [brightness, flashlightMode, isActive])
 
+  useEffect(() => {
+    if (videoTrackRef.current && zoomLevel) {
+      applyZoom(zoomLevel)
+    }
+  }, [zoomLevel])
+
+  useEffect(() => {
+    if (isActive && scanner) {
+      stopScanner().then(() => {
+        setTimeout(() => initScanner(), 100)
+      })
+    }
+  }, [scanMode])
+
   const checkBrightness = () => {
     const videoElement = document.querySelector(`#${elementId} video`) as HTMLVideoElement
     if (!videoElement) return
@@ -94,6 +115,32 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
 
     const avgBrightness = (totalBrightness / (data.length / 4) / 255) * 100
     setBrightness(Math.round(avgBrightness))
+  }
+
+  const applyZoom = async (zoom: number) => {
+    try {
+      if (videoTrackRef.current) {
+        const capabilities = videoTrackRef.current.getCapabilities() as any
+        if (capabilities.zoom) {
+          await videoTrackRef.current.applyConstraints({
+            advanced: [{ zoom } as any]
+          })
+        }
+      }
+    } catch (err) {
+      console.error('Zoom apply error:', err)
+    }
+  }
+
+  const getScanBoxSize = () => {
+    switch (scanMode) {
+      case 'wide':
+        return { width: 300, height: 200 }
+      case 'precise':
+        return { width: 200, height: 150 }
+      default:
+        return { width: 250, height: 250 }
+    }
   }
 
   const enableFlashlight = async () => {
@@ -135,19 +182,28 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
       scannerRef.current = html5QrCode
       setScanner(html5QrCode)
 
+      const scanBox = getScanBoxSize()
       const config = {
-        fps: 10,
-        qrbox: { width: 250, height: 250 },
-        aspectRatio: 1.0,
+        fps: 30,
+        qrbox: scanBox,
+        aspectRatio: scanMode === 'wide' ? 1.5 : 1.0,
         formatsToSupport: [
           0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16
-        ]
+        ],
+        disableFlip: false
       }
 
       await html5QrCode.start(
-        { facingMode: 'environment' },
+        { 
+          facingMode: 'environment'
+        },
         config,
         (decodedText) => {
+          const now = Date.now()
+          if (now - lastScanTime.current < scanCooldown) {
+            return
+          }
+          lastScanTime.current = now
           onScan(decodedText)
           setIsScanning(true)
           setTimeout(() => setIsScanning(false), 300)
@@ -157,10 +213,31 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
       )
 
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } 
+        video: { 
+          facingMode: 'environment',
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        } 
       })
       const videoTrack = stream.getVideoTracks()[0]
       videoTrackRef.current = videoTrack
+
+      const capabilities = videoTrack.getCapabilities() as any
+      if (capabilities.zoom) {
+        setMaxZoom(capabilities.zoom?.max || 3)
+      }
+
+      try {
+        await videoTrack.applyConstraints({
+          advanced: [
+            { focusMode: 'continuous' } as any,
+            { exposureMode: 'continuous' } as any,
+            { whiteBalanceMode: 'continuous' } as any
+          ]
+        })
+      } catch (e) {
+        console.log('Advanced constraints not supported', e)
+      }
 
       brightnessCheckInterval.current = window.setInterval(checkBrightness, 1000)
 
@@ -257,6 +334,38 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
           >
             <X size={20} />
           </Button>
+        </div>
+
+        <div className="absolute top-16 left-2 right-2 z-10 flex items-center justify-between gap-2">
+          <div className="bg-background/90 backdrop-blur-sm rounded-lg px-3 py-2 w-full">
+            <div className="flex items-center gap-2 mb-2">
+              <label className="text-xs font-medium text-foreground">Режим сканирования:</label>
+              <Select value={scanMode} onValueChange={(v) => setScanMode(v as ScanMode)}>
+                <SelectTrigger className="h-7 text-xs border-0 bg-transparent focus:ring-0 flex-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="standard">Стандартный</SelectItem>
+                  <SelectItem value="wide">Широкий (для больших кодов)</SelectItem>
+                  <SelectItem value="precise">Точный (для мелких кодов)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <MagnifyingGlassMinus size={16} className="text-muted-foreground shrink-0" />
+              <Slider
+                value={[zoomLevel]}
+                onValueChange={(v) => setZoomLevel(v[0])}
+                min={1}
+                max={maxZoom}
+                step={0.1}
+                className="flex-1"
+              />
+              <MagnifyingGlassPlus size={16} className="text-muted-foreground shrink-0" />
+              <span className="text-xs font-mono text-muted-foreground w-8 text-right">{zoomLevel.toFixed(1)}x</span>
+            </div>
+          </div>
         </div>
 
         <div className="absolute bottom-2 left-0 right-0 text-center">
