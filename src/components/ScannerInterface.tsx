@@ -117,9 +117,9 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
 
   if (isCameraActive) {
     return (
-      <div className="fixed inset-0 z-50 bg-background">
+      <div className="fixed inset-0 z-50 bg-background overflow-hidden">
         <div className="h-full flex flex-col">
-          <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b px-3 py-2 sm:px-4 sm:py-3 shadow-sm">
+          <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b px-3 py-2 sm:px-4 sm:py-3 shadow-sm shrink-0">
             <div className="flex items-center justify-between">
               <Button variant="outline" size="sm" onClick={() => setIsCameraActive(false)}>
                 <ArrowLeft className="mr-1 sm:mr-2" size={16} />
@@ -141,8 +141,8 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
             </div>
           </div>
 
-          <div className="flex-1 flex flex-col">
-            <div className="px-3 py-3 sm:px-4 sm:py-4 bg-card border-b">
+          <div className="flex-1 flex flex-col min-h-0">
+            <div className="px-3 py-3 sm:px-4 sm:py-4 bg-card border-b shrink-0">
               <h2 className="text-lg sm:text-xl font-bold mb-1">{session.name}</h2>
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <span>Позиций: {totalScanned}</span>
@@ -150,7 +150,7 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
               </div>
             </div>
 
-            <div className="px-3 py-2 sm:px-4 bg-card border-b">
+            <div className="px-3 py-2 sm:px-4 bg-card border-b shrink-0">
               <div className="flex items-center gap-2">
                 <label className="text-sm font-medium">Количество:</label>
                 <Button
@@ -179,7 +179,7 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
               </div>
             </div>
 
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 overflow-hidden min-h-0">
               <BarcodeScanner
                 onScan={handleCameraScan}
                 isActive={isCameraActive}

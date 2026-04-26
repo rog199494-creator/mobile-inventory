@@ -269,6 +269,16 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
       }
 
       if (videoTrackRef.current) {
+        const capabilities = videoTrackRef.current.getCapabilities() as any
+        if (capabilities.torch) {
+          try {
+            await videoTrackRef.current.applyConstraints({
+              advanced: [{ torch: false } as any]
+            })
+          } catch (e) {
+            console.log('Could not disable torch', e)
+          }
+        }
         videoTrackRef.current.stop()
         videoTrackRef.current = null
       }
@@ -291,8 +301,8 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
   }
 
   return (
-    <div className="h-full w-full relative bg-background">
-      <div className="relative h-full">
+    <div className="h-full w-full relative bg-background overflow-hidden touch-none">
+      <div className="relative h-full w-full">
         <div 
           id={elementId}
           className={`w-full h-full ${isScanning ? 'ring-4 ring-success ring-offset-2' : ''} transition-all`}
@@ -307,7 +317,7 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
           </div>
         )}
 
-        <div className="absolute top-2 left-2 right-2 z-10 flex items-center justify-between gap-2">
+        <div className="absolute top-2 left-2 right-2 z-10 flex items-center justify-between gap-2 pointer-events-auto">
           <div className="flex items-center gap-2 bg-background/90 backdrop-blur-sm rounded-lg px-2 py-1.5 sm:px-3 sm:py-2">
             {isFlashlightOn ? (
               <LightbulbFilament size={18} className="text-warning" weight="fill" />
@@ -336,7 +346,7 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
           </Button>
         </div>
 
-        <div className="absolute top-12 sm:top-14 left-2 right-2 z-10 flex items-center justify-between gap-2">
+        <div className="absolute top-12 sm:top-14 left-2 right-2 z-10 flex items-center justify-between gap-2 pointer-events-auto">
           <div className="bg-background/90 backdrop-blur-sm rounded-lg px-2 py-1.5 sm:px-3 sm:py-2 w-full">
             <div className="flex items-center gap-2 mb-1.5 sm:mb-2">
               <label className="text-[10px] sm:text-xs font-medium text-foreground">Режим:</label>
@@ -345,7 +355,7 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="standard">Стандартный</SelectItem>
+                  <SelectItem value="standard">Стандарт</SelectItem>
                   <SelectItem value="wide">Широкий</SelectItem>
                   <SelectItem value="precise">Точный</SelectItem>
                 </SelectContent>
@@ -368,7 +378,7 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
           </div>
         </div>
 
-        <div className="absolute bottom-2 left-0 right-0 text-center">
+        <div className="absolute bottom-2 left-0 right-0 text-center pointer-events-none">
           <div className="inline-block bg-background/90 backdrop-blur-sm px-4 py-2 rounded-full">
             <p className="text-sm font-medium">
               {isScanning ? '✓ Отсканировано!' : 'Наведите камеру на штрихкод'}
@@ -377,7 +387,7 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
         </div>
 
         {flashlightMode === 'auto' && (
-          <div className="absolute bottom-14 left-0 right-0 text-center">
+          <div className="absolute bottom-14 left-0 right-0 text-center pointer-events-none">
             <div className="inline-block bg-background/80 backdrop-blur-sm px-3 py-1 rounded-full">
               <p className="text-xs text-muted-foreground">
                 Освещённость: {brightness}%

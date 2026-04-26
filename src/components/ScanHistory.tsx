@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
-import { Trash, ArrowCounterClockwise, Copy, PencilSimple, X } from '@phosphor-icons/react'
+import { Trash, ArrowCounterClockwise, Copy, PencilSimple, X, Check } from '@phosphor-icons/react'
 import type { ScanRecord, ProductReference } from '@/lib/types'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -56,7 +56,9 @@ export function ScanHistory({
 
   const handleRepeat = (barcode: string, quantity: number) => {
     onRepeat(barcode, quantity)
-    toast.success('Повторено')
+    toast.success('Повторено', {
+      icon: '✓',
+    })
   }
 
   const startEdit = (scanId: string, currentQty: number) => {
@@ -70,7 +72,7 @@ export function ScanHistory({
   }
 
   const saveEdit = (scanId: string) => {
-    if (editValue < 1) {
+    if (!editValue || editValue < 1) {
       toast.error('Количество должно быть больше 0')
       return
     }
@@ -145,27 +147,46 @@ export function ScanHistory({
                         <div className="flex items-center gap-1.5">
                           <Input
                             type="number"
-                            value={editValue}
-                            onChange={(e) => setEditValue(Math.max(1, parseInt(e.target.value) || 1))}
+                            value={editValue === 0 ? '' : editValue}
+                            onChange={(e) => {
+                              const val = e.target.value
+                              if (val === '') {
+                                setEditValue(0)
+                              } else {
+                                const num = parseInt(val)
+                                if (!isNaN(num)) {
+                                  setEditValue(num)
+                                }
+                              }
+                            }}
                             className="w-16 h-9 text-center font-mono text-sm"
                             min="1"
                             autoFocus
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                saveEdit(scan.id)
+                              } else if (e.key === 'Escape') {
+                                cancelEdit()
+                              }
+                            }}
                           />
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-9 w-9 text-success hover:text-success"
+                            className="h-9 w-9 text-success hover:text-success hover:bg-success/10"
                             onClick={() => saveEdit(scan.id)}
+                            title="Сохранить"
                           >
-                            <PencilSimple size={16} weight="fill" />
+                            <Check size={18} weight="bold" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-9 w-9"
+                            className="h-9 w-9 hover:bg-muted"
                             onClick={cancelEdit}
+                            title="Отменить"
                           >
-                            <X size={16} />
+                            <X size={18} />
                           </Button>
                         </div>
                       ) : (
@@ -181,7 +202,7 @@ export function ScanHistory({
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-9 w-9 sm:h-10 sm:w-10"
+                              className="h-9 w-9 sm:h-10 sm:w-10 hover:bg-accent/10"
                               onClick={() => handleRepeat(scan.barcode, scan.actualQty)}
                               title="Повторить"
                             >
@@ -190,9 +211,9 @@ export function ScanHistory({
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-9 w-9 sm:h-10 sm:w-10 text-destructive hover:text-destructive"
+                              className="h-9 w-9 sm:h-10 sm:w-10 text-destructive hover:text-destructive hover:bg-destructive/10"
                               onClick={() => setDeleteConfirmId(scan.id)}
-                              title="Отменить"
+                              title="Удалить"
                             >
                               <Trash size={16} />
                             </Button>
