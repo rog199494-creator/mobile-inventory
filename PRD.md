@@ -13,11 +13,11 @@ This is a multi-role system with real-time synchronization, offline capabilities
 ## Essential Features
 
 ### 1. Session Management (Admin)
-- **Functionality**: Create and manage inventory sessions for specific stores with imported reference data
-- **Purpose**: Establishes the baseline "book" inventory against which physical counts are compared
-- **Trigger**: Admin clicks "New Session" and uploads Excel file with expected inventory
-- **Progression**: Upload Excel → Parse data (barcode, name, expected qty, price) → Create session → Session appears in dashboard → Can be activated
-- **Success criteria**: Excel correctly parsed, session created with all reference products, ready for scanning
+- **Functionality**: Create and manage inventory sessions for specific stores with imported reference data. Store selection can be done manually or via external Telegram Mini App integration.
+- **Purpose**: Establishes the baseline "book" inventory against which physical counts are compared, with flexible store selection options
+- **Trigger**: Admin clicks "New Session", enters session details, and either types store name manually or selects from external store management app
+- **Progression**: Click "New Session" → Enter session name → Either type store name OR (if in Telegram) enter store app URL and click "Select from App" → External app opens → Select store → Data returns automatically → Upload Excel file (barcode, name, expected qty, price) → Create session → Session appears in dashboard → Can be activated
+- **Success criteria**: Excel correctly parsed, session created with all reference products and store information (including store ID if from external app), ready for scanning
 
 ### 2. Barcode Scanner (Mobile Interface)
 - **Functionality**: Scan barcodes using device camera with html5-qrcode library or manual text input as fallback, with automatic flashlight control based on lighting conditions
@@ -57,6 +57,9 @@ This is a multi-role system with real-time synchronization, offline capabilities
 - **Invalid Excel Format**: Clear validation errors with row-by-row feedback on upload issues
 - **Low Light Scanning**: Automatic flashlight activation when ambient brightness falls below 50%, with manual override options (Always On, Always Off, Auto)
 - **No Flashlight Support**: Graceful degradation when device doesn't support torch capability
+- **External Store App Unavailable**: If store selection app doesn't respond within 30 seconds or fails to load, fallback to manual input with helpful error message
+- **Store App URL Persistence**: URL for external store app is saved locally for convenience across sessions
+- **Invalid Store Data**: Validate store data received from external app (must include id and name), reject malformed responses with clear error
 
 ## Design Direction
 

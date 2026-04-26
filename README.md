@@ -18,8 +18,22 @@ A professional mobile inventory management system that transforms smartphones in
 
 Click "New Session" and provide:
 - Session name (e.g., "Monthly Inventory - January 2024")
-- Store/location name
+- Store/location name (manual entry or via Telegram Mini App)
 - Upload a CSV file with your expected inventory
+
+#### Store Selection Options
+
+**Option A: Manual Entry**
+Simply type the store name directly into the "Store/location" field.
+
+**Option B: Telegram Mini App Integration** (Available when running in Telegram)
+1. Enter the URL of your store management mini app (e.g., `https://t.me/your_store_bot/app`)
+2. Click "Select store from app"
+3. Your external store app will open
+4. Select the desired store
+5. Store name and ID will automatically populate
+
+The app URL is saved for future use. See [TELEGRAM_INTEGRATION.md](TELEGRAM_INTEGRATION.md) for implementation details.
 
 ### 2. CSV File Format
 

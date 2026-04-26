@@ -1,11 +1,14 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Upload } from '@phosphor-icons/react'
+import { Upload, Storefront } from '@phosphor-icons/react'
 import { parseExcelData } from '@/lib/inventory'
 import type { ProductReference } from '@/lib/types'
+import type { StoreData } from '@/lib/telegram'
+import { openStoreSelectionApp, isTelegramWebApp } from '@/lib/telegram'
+import { useKV } from '@github/spark/hooks'
 import { toast } from 'sonner'
 
 interface NewSessionDialogProps {
@@ -17,9 +20,39 @@ interface NewSessionDialogProps {
 export function NewSessionDialog({ open, onOpenChange, onCreate }: NewSessionDialogProps) {
   const [name, setName] = useState('')
   const [storeName, setStoreName] = useState('')
+  const [storeId, setStoreId] = useState('')
   const [products, setProducts] = useState<ProductReference[]>([])
   const [fileName, setFileName] = useState('')
+  const [isLoadingStore, setIsLoadingStore] = useState(false)
+  const [storeAppUrl, setStoreAppUrl] = useKV('store-app-url', '')
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const isTelegram = isTelegramWebApp()
+
+  const handleSelectStoreFromApp = async () => {
+    const url = storeAppUrl || ''
+    if (!url.trim()) {
+      toast.error('Введите URL мини-аппа для выбора магазина')
+      return
+    }
+
+    setIsLoadingStore(true)
+    try {
+      const store = await openStoreSelectionApp(url)
+      
+      if (store) {
+        setStoreName(store.name)
+        setStoreId(store.id)
+        toast.success(`Выбран магазин: ${store.name}`)
+      } else {
+        toast.error('Магазин не был выбран')
+      }
+    } catch (error) {
+      toast.error('Ошибка при получении данных магазина')
+    } finally {
+      setIsLoadingStore(false)
+    }
+  }
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -55,14 +88,16 @@ export function NewSessionDialog({ open, onOpenChange, onCreate }: NewSessionDia
     
     setName('')
     setStoreName('')
+    setStoreId('')
     setProducts([])
     setFileName('')
+    setStoreAppUrl('')
     onOpenChange(false)
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl">Новая сессия инвентаризации</DialogTitle>
         </DialogHeader>
@@ -87,10 +122,43 @@ export function NewSessionDialog({ open, onOpenChange, onCreate }: NewSessionDia
               onChange={(e) => setStoreName(e.target.value)}
               placeholder="Центральный склад"
               className="mt-2"
+              disabled={isLoadingStore}
             />
+            {storeId && (
+              <p className="text-xs text-muted-foreground mt-1">
+                ID: {storeId}
+              </p>
+            )}
           </div>
 
-          <div>
+          {isTelegram && (
+            <div className="border-t pt-4">
+              <Label htmlFor="store-app-url">Выбор из мини-аппа Telegram</Label>
+              <div className="space-y-2 mt-2">
+                <Input
+                  id="store-app-url"
+                  value={storeAppUrl || ''}
+                  onChange={(e) => setStoreAppUrl(e.target.value)}
+                  placeholder="https://t.me/your_store_bot/app"
+                  disabled={isLoadingStore}
+                />
+                <Button
+                  variant="outline"
+                  onClick={handleSelectStoreFromApp}
+                  disabled={isLoadingStore || !(storeAppUrl || '').trim()}
+                  className="w-full"
+                >
+                  <Storefront className="mr-2" size={20} />
+                  {isLoadingStore ? 'Ожидание выбора...' : 'Выбрать магазин из приложения'}
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  Откроется другое мини-приложение для выбора магазина
+                </p>
+              </div>
+            </div>
+          )}
+
+          <div className="border-t pt-4">
             <Label>Список товаров (CSV/Excel)</Label>
             <div className="mt-2">
               <input
