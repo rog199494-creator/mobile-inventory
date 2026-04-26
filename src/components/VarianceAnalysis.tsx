@@ -4,17 +4,30 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
-import { Download, TrendUp, TrendDown, Warning, CheckCircle } from '@phosphor-icons/react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Download, TrendUp, TrendDown, Warning, CheckCircle, Lock, FileXls } from '@phosphor-icons/react'
 import type { InventorySession, VarianceItem } from '@/lib/types'
-import { calculateVariances, calculateSummary, generateExcelCSV, downloadCSV, formatNumber, formatCurrency, formatDate } from '@/lib/inventory'
+import { calculateVariances, calculateSummary, generateExcelCSV, generateExcelFile, downloadCSV, formatNumber, formatCurrency, formatDate } from '@/lib/inventory'
+import { toast } from 'sonner'
 
 interface VarianceAnalysisProps {
   session: InventorySession
   onBack: () => void
+  onComplete?: (sessionId: string) => void
 }
 
-export function VarianceAnalysis({ session, onBack }: VarianceAnalysisProps) {
+export function VarianceAnalysis({ session, onBack, onComplete }: VarianceAnalysisProps) {
   const [filter, setFilter] = useState<'all' | 'shortage' | 'surplus' | 'unknown'>('all')
+  const [showCompleteDialog, setShowCompleteDialog] = useState(false)
   
   const variances = useMemo(() => calculateVariances(session), [session])
   const summary = useMemo(() => calculateSummary(variances), [variances])
@@ -24,10 +37,31 @@ export function VarianceAnalysis({ session, onBack }: VarianceAnalysisProps) {
     return variances.filter(v => v.varianceType === filter)
   }, [variances, filter])
 
-  const handleExport = () => {
+  const handleExportCSV = () => {
     const csv = generateExcelCSV(variances)
-    downloadCSV(csv, `inventory-${session.name}-${Date.now()}.csv`)
+    downloadCSV(csv, `Инвентаризация_${session.name}_${Date.now()}.csv`)
+    toast.success('CSV файл загружен')
   }
+
+  const handleExportExcel = () => {
+    try {
+      generateExcelFile(session, variances)
+      toast.success('Excel файл загружен')
+    } catch (error) {
+      toast.error('Ошибка при создании Excel файла')
+    }
+  }
+
+  const handleCompleteSession = () => {
+    if (onComplete) {
+      onComplete(session.id)
+      toast.success('Сессия завершена успешно')
+      setShowCompleteDialog(false)
+      onBack()
+    }
+  }
+
+  const isCompleted = session.status === 'completed'
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-6">
@@ -37,16 +71,37 @@ export function VarianceAnalysis({ session, onBack }: VarianceAnalysisProps) {
             <Button variant="outline" onClick={onBack} className="mb-4">
               ← Назад
             </Button>
-            <h1 className="text-3xl font-bold">{session.name}</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold">{session.name}</h1>
+              {isCompleted && (
+                <Badge className="bg-muted text-muted-foreground">
+                  <Lock className="mr-1" size={14} />
+                  Завершена
+                </Badge>
+              )}
+            </div>
             <p className="text-muted-foreground">{session.storeName}</p>
             <p className="text-sm text-muted-foreground mt-1">
               Создана {formatDate(session.createdAt)}
+              {session.completedAt && ` • Завершена ${formatDate(session.completedAt)}`}
             </p>
           </div>
-          <Button onClick={handleExport}>
-            <Download className="mr-2" size={16} />
-            Экспорт CSV
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleExportCSV}>
+              <Download className="mr-2" size={16} />
+              CSV
+            </Button>
+            <Button variant="outline" onClick={handleExportExcel}>
+              <FileXls className="mr-2" size={16} />
+              Excel
+            </Button>
+            {!isCompleted && (
+              <Button onClick={() => setShowCompleteDialog(true)}>
+                <Lock className="mr-2" size={16} />
+                Завершить сессию
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -166,6 +221,24 @@ export function VarianceAnalysis({ session, onBack }: VarianceAnalysisProps) {
           </Tabs>
         </Card>
       </div>
+
+      <AlertDialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Завершить сессию инвентаризации?</AlertDialogTitle>
+            <AlertDialogDescription>
+              После завершения сессии вы не сможете добавлять новые сканирования. 
+              Убедитесь, что вся работа выполнена и все данные проверены.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Отмена</AlertDialogCancel>
+            <AlertDialogAction onClick={handleCompleteSession}>
+              Завершить сессию
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

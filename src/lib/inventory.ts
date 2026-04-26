@@ -1,3 +1,4 @@
+import * as XLSX from 'xlsx'
 import type { InventorySession, VarianceItem, SessionSummary, ProductReference, ScanRecord } from './types'
 
 export function calculateVariances(session: InventorySession): VarianceItem[] {
@@ -36,7 +37,7 @@ export function calculateVariances(session: InventorySession): VarianceItem[] {
   scannedBarcodes.forEach((actualQty, barcode) => {
     variances.push({
       barcode,
-      name: 'Unknown Item',
+      name: 'Неизвестный товар',
       expectedQty: 0,
       actualQty,
       variance: actualQty,
@@ -100,7 +101,7 @@ export function parseExcelData(csvText: string): ProductReference[] {
 }
 
 export function generateExcelCSV(variances: VarianceItem[]): string {
-  const headers = ['Barcode', 'Product Name', 'Expected Qty', 'Actual Qty', 'Variance', 'Price', 'Variance Value']
+  const headers = ['Штрихкод', 'Название товара', 'План (шт)', 'Факт (шт)', 'Разница (шт)', 'Цена (₽)', 'Разница (₽)', 'Статус']
   const rows = variances.map(v => [
     v.barcode,
     v.name,
@@ -108,14 +109,18 @@ export function generateExcelCSV(variances: VarianceItem[]): string {
     v.actualQty.toString(),
     v.variance.toString(),
     v.price.toFixed(2),
-    v.varianceValue.toFixed(2)
+    v.varianceValue.toFixed(2),
+    v.varianceType === 'shortage' ? 'Недостача' :
+    v.varianceType === 'surplus' ? 'Излишки' :
+    v.varianceType === 'unknown' ? 'Неизвестно' : 'Совпадение'
   ])
 
   return [headers, ...rows].map(row => row.join(',')).join('\n')
 }
 
 export function downloadCSV(content: string, filename: string) {
-  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' })
+  const BOM = '\uFEFF'
+  const blob = new Blob([BOM + content], { type: 'text/csv;charset=utf-8;' })
   const link = document.createElement('a')
   const url = URL.createObjectURL(blob)
   
@@ -128,6 +133,65 @@ export function downloadCSV(content: string, filename: string) {
   document.body.removeChild(link)
   
   URL.revokeObjectURL(url)
+}
+
+export function generateExcelFile(session: InventorySession, variances: VarianceItem[]): void {
+  const summary = calculateSummary(variances)
+  
+  const summaryData = [
+    ['Отчёт по инвентаризации'],
+    [''],
+    ['Название сессии:', session.name],
+    ['Магазин:', session.storeName],
+    ['Создана:', formatDate(session.createdAt)],
+    ['Статус:', session.status === 'completed' ? 'Завершена' : session.status === 'active' ? 'Активна' : 'Запланирована'],
+    ...(session.completedAt ? [['Завершена:', formatDate(session.completedAt)]] : []),
+    [''],
+    ['Итоги'],
+    ['Всего товаров:', summary.totalProducts],
+    ['Отсканировано:', summary.scannedProducts],
+    ['Недостача:', summary.shortageCount],
+    ['Излишки:', summary.surplusCount],
+    ['Неизвестные:', summary.unknownCount],
+    ['Совпадения:', summary.matchCount],
+    [''],
+  ]
+
+  const detailsHeaders = ['Штрихкод', 'Название товара', 'План (шт)', 'Факт (шт)', 'Разница (шт)', 'Цена (₽)', 'Разница (₽)', 'Статус']
+  const detailsData = variances.map(v => [
+    v.barcode,
+    v.name,
+    v.expectedQty,
+    v.actualQty,
+    v.variance,
+    v.price,
+    v.varianceValue,
+    v.varianceType === 'shortage' ? 'Недостача' :
+    v.varianceType === 'surplus' ? 'Излишки' :
+    v.varianceType === 'unknown' ? 'Неизвестно' : 'Совпадение'
+  ])
+
+  const ws1 = XLSX.utils.aoa_to_sheet(summaryData)
+  const ws2 = XLSX.utils.aoa_to_sheet([detailsHeaders, ...detailsData])
+
+  ws1['!cols'] = [{ wch: 20 }, { wch: 30 }]
+  ws2['!cols'] = [
+    { wch: 15 },
+    { wch: 40 },
+    { wch: 12 },
+    { wch: 12 },
+    { wch: 15 },
+    { wch: 12 },
+    { wch: 15 },
+    { wch: 15 }
+  ]
+
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws1, 'Сводка')
+  XLSX.utils.book_append_sheet(wb, ws2, 'Детали')
+
+  const filename = `Инвентаризация_${session.name}_${new Date().toISOString().split('T')[0]}.xlsx`
+  XLSX.writeFile(wb, filename)
 }
 
 export function formatNumber(num: number): string {

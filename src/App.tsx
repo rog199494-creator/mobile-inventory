@@ -128,6 +128,14 @@ function App() {
     setSelectedSession(null)
   }
 
+  const handleCompleteSession = (sessionId: string) => {
+    setSessions(current =>
+      (current || []).map(s =>
+        s.id === sessionId ? { ...s, status: 'completed' as const, completedAt: Date.now() } : s
+      )
+    )
+  }
+
   const filteredSessions = (sessions || []).filter(s => 
     statusFilter === 'all' || s.status === statusFilter
   )
@@ -155,6 +163,7 @@ function App() {
         <VarianceAnalysis
           session={currentSession}
           onBack={handleBackToDashboard}
+          onComplete={handleCompleteSession}
         />
         <Toaster />
       </>

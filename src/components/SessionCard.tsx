@@ -83,7 +83,7 @@ export function SessionCard({ session, onView, onScan }: SessionCardProps) {
         >
           Подробнее
         </Button>
-        {session.status === 'active' && (
+        {(session.status === 'active' || session.status === 'planned') && (
           <Button 
             className="flex-1"
             onClick={() => onScan(session)}
