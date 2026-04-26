@@ -3,14 +3,22 @@ import { useKV } from '@github/spark/hooks'
 import { Toaster } from '@/components/ui/sonner'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Plus } from '@phosphor-icons/react'
+import { Plus, Info } from '@phosphor-icons/react'
 import { SessionCard } from '@/components/SessionCard'
 import { ScannerInterface } from '@/components/ScannerInterface'
 import { VarianceAnalysis } from '@/components/VarianceAnalysis'
 import { NewSessionDialog } from '@/components/NewSessionDialog'
+import { ProcessGuide } from '@/components/ProcessGuide'
 import type { InventorySession, ProductReference, ScanRecord } from '@/lib/types'
 import { toast } from 'sonner'
 import { v4 as uuidv4 } from 'uuid'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 type View = 'dashboard' | 'scanner' | 'analysis'
 
@@ -180,10 +188,26 @@ function App() {
                 <h1 className="text-4xl font-bold tracking-tight">Мобильная инвентаризация</h1>
                 <p className="text-muted-foreground mt-1">Профессиональная инвентаризация стала проще</p>
               </div>
-              <Button onClick={() => setNewSessionOpen(true)} size="lg">
-                <Plus className="mr-2" size={20} />
-                Новая сессия
-              </Button>
+              <div className="flex gap-2">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="lg">
+                      <Info className="mr-2" size={20} />
+                      Как работает
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle className="text-2xl">Пошаговая инструкция</DialogTitle>
+                    </DialogHeader>
+                    <ProcessGuide />
+                  </DialogContent>
+                </Dialog>
+                <Button onClick={() => setNewSessionOpen(true)} size="lg">
+                  <Plus className="mr-2" size={20} />
+                  Новая сессия
+                </Button>
+              </div>
             </div>
           </div>
         </div>

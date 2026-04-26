@@ -3,11 +3,12 @@ import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Barcode, Plus, Minus, Check, WifiSlash, WifiHigh } from '@phosphor-icons/react'
+import { Barcode, Plus, Minus, Check, WifiSlash, WifiHigh, ArrowLeft } from '@phosphor-icons/react'
 import type { InventorySession, ProductReference } from '@/lib/types'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BarcodeScanner } from '@/components/BarcodeScanner'
+import { StepIndicator } from '@/components/StepIndicator'
 
 interface ScannerInterfaceProps {
   session: InventorySession
@@ -17,13 +18,31 @@ interface ScannerInterfaceProps {
   pendingScans: number
 }
 
+const SCANNER_STEPS = [
+  { id: 'setup', label: 'Подготовка', description: 'Настройка сканера' },
+  { id: 'scanning', label: 'Сканирование', description: 'Процесс учёта' },
+  { id: 'review', label: 'Проверка', description: 'Контроль данных' },
+  { id: 'complete', label: 'Завершение', description: 'Финализация' }
+]
+
 export function ScannerInterface({ session, onScan, onBack, isOnline, pendingScans }: ScannerInterfaceProps) {
   const [barcode, setBarcode] = useState('')
   const [quantity, setQuantity] = useState(1)
   const [lastScanned, setLastScanned] = useState<ProductReference | null>(null)
   const [showConfirm, setShowConfirm] = useState(false)
   const [isCameraActive, setIsCameraActive] = useState(false)
+  const [currentStep, setCurrentStep] = useState(1)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (session.scans.length === 0) {
+      setCurrentStep(0)
+    } else if (session.scans.length > 0 && session.scans.length < session.products.length * 0.5) {
+      setCurrentStep(1)
+    } else if (session.scans.length >= session.products.length * 0.5) {
+      setCurrentStep(2)
+    }
+  }, [session.scans.length, session.products.length])
 
   useEffect(() => {
     if (!isCameraActive) {
@@ -72,7 +91,8 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
       <div className="max-w-2xl mx-auto space-y-4">
         <div className="flex items-center justify-between mb-6">
           <Button variant="outline" onClick={onBack}>
-            ← Назад
+            <ArrowLeft className="mr-2" size={16} />
+            Назад
           </Button>
           <Badge variant={isOnline ? 'default' : 'destructive'} className="px-3 py-1">
             {isOnline ? (
@@ -88,6 +108,10 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
             )}
           </Badge>
         </div>
+
+        <Card className="p-4 bg-card/80 backdrop-blur-sm">
+          <StepIndicator steps={SCANNER_STEPS} currentStep={currentStep} />
+        </Card>
 
         <Card className="p-6">
           <h2 className="text-2xl font-bold mb-2">{session.name}</h2>

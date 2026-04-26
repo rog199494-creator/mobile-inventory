@@ -2,8 +2,16 @@ import { useEffect, useRef, useState } from 'react'
 import { Html5Qrcode } from 'html5-qrcode'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Camera, X } from '@phosphor-icons/react'
+import { Camera, X, Lightbulb, LightbulbFilament } from '@phosphor-icons/react'
 import { toast } from 'sonner'
+import { useKV } from '@github/spark/hooks'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface BarcodeScannerProps {
   onScan: (barcode: string) => void
@@ -11,12 +19,19 @@ interface BarcodeScannerProps {
   onToggle: () => void
 }
 
+type FlashlightMode = 'auto' | 'on' | 'off'
+
 export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerProps) {
   const [scanner, setScanner] = useState<Html5Qrcode | null>(null)
   const [isScanning, setIsScanning] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [flashlightMode, setFlashlightMode] = useKV<FlashlightMode>('flashlight-mode', 'auto')
+  const [isFlashlightOn, setIsFlashlightOn] = useState(false)
+  const [brightness, setBrightness] = useState(100)
   const scannerRef = useRef<Html5Qrcode | null>(null)
+  const videoTrackRef = useRef<MediaStreamTrack | null>(null)
   const elementId = 'barcode-scanner-view'
+  const brightnessCheckInterval = useRef<number | null>(null)
 
   useEffect(() => {
     if (isActive && !scanner) {
@@ -29,8 +44,89 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
       if (scannerRef.current) {
         stopScanner()
       }
+      if (brightnessCheckInterval.current) {
+        clearInterval(brightnessCheckInterval.current)
+      }
     }
   }, [isActive])
+
+  useEffect(() => {
+    if (flashlightMode === 'on' && isActive) {
+      enableFlashlight()
+    } else if (flashlightMode === 'off' && isActive) {
+      disableFlashlight()
+    }
+  }, [flashlightMode, isActive])
+
+  useEffect(() => {
+    if (flashlightMode === 'auto' && isActive) {
+      if (brightness < 50) {
+        enableFlashlight()
+      } else if (brightness > 70) {
+        disableFlashlight()
+      }
+    }
+  }, [brightness, flashlightMode, isActive])
+
+  const checkBrightness = () => {
+    const videoElement = document.querySelector(`#${elementId} video`) as HTMLVideoElement
+    if (!videoElement) return
+
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    canvas.width = videoElement.videoWidth
+    canvas.height = videoElement.videoHeight
+    ctx.drawImage(videoElement, 0, 0)
+
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+    const data = imageData.data
+    let totalBrightness = 0
+
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i]
+      const g = data[i + 1]
+      const b = data[i + 2]
+      const brightness = (r + g + b) / 3
+      totalBrightness += brightness
+    }
+
+    const avgBrightness = (totalBrightness / (data.length / 4) / 255) * 100
+    setBrightness(Math.round(avgBrightness))
+  }
+
+  const enableFlashlight = async () => {
+    try {
+      if (videoTrackRef.current) {
+        const capabilities = videoTrackRef.current.getCapabilities() as any
+        if (capabilities.torch) {
+          await videoTrackRef.current.applyConstraints({
+            advanced: [{ torch: true } as any]
+          })
+          setIsFlashlightOn(true)
+        }
+      }
+    } catch (err) {
+      console.error('Flashlight enable error:', err)
+    }
+  }
+
+  const disableFlashlight = async () => {
+    try {
+      if (videoTrackRef.current) {
+        const capabilities = videoTrackRef.current.getCapabilities() as any
+        if (capabilities.torch) {
+          await videoTrackRef.current.applyConstraints({
+            advanced: [{ torch: false } as any]
+          })
+          setIsFlashlightOn(false)
+        }
+      }
+    } catch (err) {
+      console.error('Flashlight disable error:', err)
+    }
+  }
 
   const initScanner = async () => {
     try {
@@ -59,6 +155,18 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
         () => {
         }
       )
+
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'environment' } 
+      })
+      const videoTrack = stream.getVideoTracks()[0]
+      videoTrackRef.current = videoTrack
+
+      brightnessCheckInterval.current = window.setInterval(checkBrightness, 1000)
+
+      if (flashlightMode === 'on') {
+        setTimeout(() => enableFlashlight(), 500)
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Не удалось запустить камеру'
       setError(errorMessage)
@@ -69,6 +177,16 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
 
   const stopScanner = async () => {
     try {
+      if (brightnessCheckInterval.current) {
+        clearInterval(brightnessCheckInterval.current)
+        brightnessCheckInterval.current = null
+      }
+
+      if (videoTrackRef.current) {
+        videoTrackRef.current.stop()
+        videoTrackRef.current = null
+      }
+
       if (scannerRef.current && scannerRef.current.isScanning) {
         await scannerRef.current.stop()
         scannerRef.current.clear()
@@ -76,6 +194,7 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
       scannerRef.current = null
       setScanner(null)
       setError(null)
+      setIsFlashlightOn(false)
     } catch (err) {
       console.error('Error stopping scanner:', err)
     }
@@ -111,7 +230,25 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
           </div>
         )}
 
-        <div className="absolute top-2 right-2 z-10">
+        <div className="absolute top-2 left-2 right-2 z-10 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 bg-background/90 backdrop-blur-sm rounded-lg px-3 py-2">
+            {isFlashlightOn ? (
+              <LightbulbFilament size={20} className="text-warning" weight="fill" />
+            ) : (
+              <Lightbulb size={20} className="text-muted-foreground" />
+            )}
+            <Select value={flashlightMode} onValueChange={(v) => setFlashlightMode(v as FlashlightMode)}>
+              <SelectTrigger className="w-[120px] h-8 text-sm border-0 bg-transparent focus:ring-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="auto">Авто</SelectItem>
+                <SelectItem value="on">Включён</SelectItem>
+                <SelectItem value="off">Выключен</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <Button
             size="icon"
             variant="destructive"
@@ -129,6 +266,16 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
             </p>
           </div>
         </div>
+
+        {flashlightMode === 'auto' && (
+          <div className="absolute bottom-14 left-0 right-0 text-center">
+            <div className="inline-block bg-background/80 backdrop-blur-sm px-3 py-1 rounded-full">
+              <p className="text-xs text-muted-foreground">
+                Освещённость: {brightness}%
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </Card>
   )

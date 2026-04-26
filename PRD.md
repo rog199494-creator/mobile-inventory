@@ -20,11 +20,11 @@ This is a multi-role system with real-time synchronization, offline capabilities
 - **Success criteria**: Excel correctly parsed, session created with all reference products, ready for scanning
 
 ### 2. Barcode Scanner (Mobile Interface)
-- **Functionality**: Scan barcodes using device camera with html5-qrcode library or manual text input as fallback
-- **Purpose**: Enable staff to quickly capture physical inventory counts on mobile devices using camera scanning
+- **Functionality**: Scan barcodes using device camera with html5-qrcode library or manual text input as fallback, with automatic flashlight control based on lighting conditions
+- **Purpose**: Enable staff to quickly capture physical inventory counts on mobile devices using camera scanning with optimal visibility
 - **Trigger**: Staff selects active session and begins scanning
-- **Progression**: Click "Open Camera" → Camera activates with live preview → Point at barcode → Auto-detect and scan → System finds product → Adjust quantity if needed → Confirm → Record saved locally → Auto-sync when online (or use manual text input if camera unavailable)
-- **Success criteria**: Camera scanning detects 1D/2D barcodes automatically, manual input available as fallback, each scan creates a record with barcode, quantity, timestamp; works offline; syncs automatically
+- **Progression**: Follow step-by-step process (Setup → Scanning → Review → Complete) → Click "Open Camera" → Camera activates with live preview → Flashlight auto-enables in low light (or manual control: Always On/Always Off/Auto) → Point at barcode → Auto-detect and scan → System finds product → Adjust quantity if needed → Confirm → Record saved locally → Auto-sync when online (or use manual text input if camera unavailable)
+- **Success criteria**: Camera scanning detects 1D/2D barcodes automatically, flashlight adapts to lighting conditions (<50% brightness auto-on, >70% auto-off), manual flashlight control available, manual input available as fallback, each scan creates a record with barcode, quantity, timestamp; works offline; syncs automatically; progress tracked through visual step indicators
 
 ### 3. Real-time Progress Dashboard
 - **Functionality**: Live view of scanning progress, staff activity, and preliminary discrepancies
@@ -55,6 +55,8 @@ This is a multi-role system with real-time synchronization, offline capabilities
 - **Mid-Session Excel Re-upload**: Allow updating reference data during active session with confirmation dialog
 - **Incomplete Sessions**: Auto-save progress, allow resuming sessions later, warning before closing with unsynced data
 - **Invalid Excel Format**: Clear validation errors with row-by-row feedback on upload issues
+- **Low Light Scanning**: Automatic flashlight activation when ambient brightness falls below 50%, with manual override options (Always On, Always Off, Auto)
+- **No Flashlight Support**: Graceful degradation when device doesn't support torch capability
 
 ## Design Direction
 
@@ -126,6 +128,9 @@ Key animation moments:
 - Real-time scanning feed component with auto-scroll to latest
 - Variance summary cards with large numeric displays and trend indicators
 - Barcode input with format validation and auto-submit on valid code detection
+- Step-by-step progress indicator for scanning workflow (Setup → Scanning → Review → Complete)
+- Flashlight control dropdown with mode selection and status indicator
+- Brightness meter showing ambient light level in auto mode
 
 **States**:
 - Buttons: Distinct hover with 2px lift shadow, active with pressed effect, disabled at 40% opacity
@@ -143,6 +148,10 @@ Key animation moments:
 - ChartBar: `ChartBar` - Analytics/reporting view
 - Plus: `Plus` - Create new session
 - ArrowsClockwise: `ArrowsClockwise` - Sync status
+- Lightbulb: `Lightbulb` - Flashlight off state
+- LightbulbFilament: `LightbulbFilament` - Flashlight on state
+- Circle: `Circle` - Step indicators (incomplete)
+- CheckCircle: `CheckCircle` - Step indicators (complete)
 
 **Spacing**:
 - Card padding: `p-6` on desktop, `p-4` on mobile
