@@ -30,7 +30,7 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
   const [flashlightMode, setFlashlightMode] = useKV<FlashlightMode>('flashlight-mode', 'auto')
   const [isFlashlightOn, setIsFlashlightOn] = useState(false)
   const [brightness, setBrightness] = useState(100)
-  const [zoomLevel, setZoomLevel] = useState(1)
+  const [zoomLevel, setZoomLevel] = useState(2)
   const [maxZoom, setMaxZoom] = useState(3)
   const [scanMode, setScanMode] = useKV<ScanMode>('scan-mode', 'standard')
   const scannerRef = useRef<Html5Qrcode | null>(null)
@@ -225,6 +225,9 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
       const capabilities = videoTrack.getCapabilities() as any
       if (capabilities.zoom) {
         setMaxZoom(capabilities.zoom?.max || 3)
+        const initialZoom = Math.min(2, capabilities.zoom?.max || 2)
+        setZoomLevel(initialZoom)
+        await applyZoom(initialZoom)
       }
 
       try {
