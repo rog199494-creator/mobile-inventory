@@ -4,6 +4,20 @@ export interface StoreData {
   address?: string
 }
 
+export async function fetchStores(): Promise<StoreData[]> {
+  try {
+    const response = await fetch('https://miniapp.bitrixabd.ru/stores')
+    if (!response.ok) {
+      throw new Error('Failed to fetch stores')
+    }
+    const data = await response.json()
+    return data as StoreData[]
+  } catch (error) {
+    console.error('Error fetching stores:', error)
+    return []
+  }
+}
+
 export function getTelegramWebApp() {
   return (window as any).Telegram?.WebApp || null
 }
