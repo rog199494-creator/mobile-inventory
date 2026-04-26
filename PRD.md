@@ -20,11 +20,11 @@ This is a multi-role system with real-time synchronization, offline capabilities
 - **Success criteria**: Excel correctly parsed, session created with all reference products, ready for scanning
 
 ### 2. Barcode Scanner (Mobile Interface)
-- **Functionality**: Scan barcodes using camera simulation (text input for MVP) and record actual quantities
-- **Purpose**: Enable staff to quickly capture physical inventory counts on mobile devices
+- **Functionality**: Scan barcodes using device camera with html5-qrcode library or manual text input as fallback
+- **Purpose**: Enable staff to quickly capture physical inventory counts on mobile devices using camera scanning
 - **Trigger**: Staff selects active session and begins scanning
-- **Progression**: Enter/scan barcode → System finds product → Show product info → Enter/adjust quantity → Confirm → Record saved locally → Auto-sync when online
-- **Success criteria**: Each scan creates a record with barcode, quantity, timestamp; works offline; syncs automatically
+- **Progression**: Click "Open Camera" → Camera activates with live preview → Point at barcode → Auto-detect and scan → System finds product → Adjust quantity if needed → Confirm → Record saved locally → Auto-sync when online (or use manual text input if camera unavailable)
+- **Success criteria**: Camera scanning detects 1D/2D barcodes automatically, manual input available as fallback, each scan creates a record with barcode, quantity, timestamp; works offline; syncs automatically
 
 ### 3. Real-time Progress Dashboard
 - **Functionality**: Live view of scanning progress, staff activity, and preliminary discrepancies
