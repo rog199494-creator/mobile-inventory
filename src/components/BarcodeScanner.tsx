@@ -37,7 +37,8 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
   const elementId = 'barcode-scanner-view'
   const brightnessCheckInterval = useRef<number | null>(null)
   const lastScanTime = useRef<number>(0)
-  const scanCooldown = 500
+  const lastScannedCode = useRef<string>('')
+  const scanCooldown = 1000
 
   useEffect(() => {
     if (isActive && !scanner) {
@@ -199,10 +200,16 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
         config,
         (decodedText) => {
           const now = Date.now()
-          if (now - lastScanTime.current < scanCooldown) {
+          if (now - lastScanTime.current < scanCooldown || lastScannedCode.current === decodedText) {
             return
           }
           lastScanTime.current = now
+          lastScannedCode.current = decodedText
+          
+          setTimeout(() => {
+            lastScannedCode.current = ''
+          }, scanCooldown)
+          
           onScan(decodedText)
           setIsScanning(true)
           setTimeout(() => setIsScanning(false), 300)
@@ -301,14 +308,14 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
         )}
 
         <div className="absolute top-2 left-2 right-2 z-10 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 bg-background/90 backdrop-blur-sm rounded-lg px-3 py-2">
+          <div className="flex items-center gap-2 bg-background/90 backdrop-blur-sm rounded-lg px-2 py-1.5 sm:px-3 sm:py-2">
             {isFlashlightOn ? (
-              <LightbulbFilament size={20} className="text-warning" weight="fill" />
+              <LightbulbFilament size={18} className="text-warning" weight="fill" />
             ) : (
-              <Lightbulb size={20} className="text-muted-foreground" />
+              <Lightbulb size={18} className="text-muted-foreground" />
             )}
             <Select value={flashlightMode} onValueChange={(v) => setFlashlightMode(v as FlashlightMode)}>
-              <SelectTrigger className="w-[120px] h-8 text-sm border-0 bg-transparent focus:ring-0">
+              <SelectTrigger className="w-[100px] sm:w-[120px] h-7 sm:h-8 text-xs sm:text-sm border-0 bg-transparent focus:ring-0">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -323,30 +330,30 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
             size="icon"
             variant="destructive"
             onClick={onToggle}
-            className="rounded-full shadow-lg"
+            className="rounded-full shadow-lg h-8 w-8 sm:h-10 sm:w-10"
           >
-            <X size={20} />
+            <X size={18} />
           </Button>
         </div>
 
-        <div className="absolute top-16 left-2 right-2 z-10 flex items-center justify-between gap-2">
-          <div className="bg-background/90 backdrop-blur-sm rounded-lg px-3 py-2 w-full">
-            <div className="flex items-center gap-2 mb-2">
-              <label className="text-xs font-medium text-foreground">Режим сканирования:</label>
+        <div className="absolute top-12 sm:top-14 left-2 right-2 z-10 flex items-center justify-between gap-2">
+          <div className="bg-background/90 backdrop-blur-sm rounded-lg px-2 py-1.5 sm:px-3 sm:py-2 w-full">
+            <div className="flex items-center gap-2 mb-1.5 sm:mb-2">
+              <label className="text-[10px] sm:text-xs font-medium text-foreground">Режим:</label>
               <Select value={scanMode} onValueChange={(v) => setScanMode(v as ScanMode)}>
-                <SelectTrigger className="h-7 text-xs border-0 bg-transparent focus:ring-0 flex-1">
+                <SelectTrigger className="h-6 sm:h-7 text-[10px] sm:text-xs border-0 bg-transparent focus:ring-0 flex-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="standard">Стандартный</SelectItem>
-                  <SelectItem value="wide">Широкий (для больших кодов)</SelectItem>
-                  <SelectItem value="precise">Точный (для мелких кодов)</SelectItem>
+                  <SelectItem value="wide">Широкий</SelectItem>
+                  <SelectItem value="precise">Точный</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
-            <div className="flex items-center gap-2">
-              <MagnifyingGlassMinus size={16} className="text-muted-foreground shrink-0" />
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <MagnifyingGlassMinus size={14} className="text-muted-foreground shrink-0" />
               <Slider
                 value={[zoomLevel]}
                 onValueChange={(v) => setZoomLevel(v[0])}
@@ -355,8 +362,8 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
                 step={0.1}
                 className="flex-1"
               />
-              <MagnifyingGlassPlus size={16} className="text-muted-foreground shrink-0" />
-              <span className="text-xs font-mono text-muted-foreground w-8 text-right">{zoomLevel.toFixed(1)}x</span>
+              <MagnifyingGlassPlus size={14} className="text-muted-foreground shrink-0" />
+              <span className="text-[10px] sm:text-xs font-mono text-muted-foreground w-7 sm:w-8 text-right">{zoomLevel.toFixed(1)}x</span>
             </div>
           </div>
         </div>

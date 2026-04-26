@@ -4,11 +4,13 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Barcode, Plus, Minus, Check, WifiSlash, WifiHigh, ArrowLeft, Camera } from '@phosphor-icons/react'
-import type { InventorySession, ProductReference } from '@/lib/types'
+import type { InventorySession, ProductReference, ScanRecord } from '@/lib/types'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BarcodeScanner } from '@/components/BarcodeScanner'
 import { StepIndicator } from '@/components/StepIndicator'
+import { ScanHistory } from '@/components/ScanHistory'
+import { useKV } from '@github/spark/hooks'
 
 interface ScannerInterfaceProps {
   session: InventorySession
@@ -16,6 +18,8 @@ interface ScannerInterfaceProps {
   onBack: () => void
   isOnline: boolean
   pendingScans: number
+  onDeleteScan?: (sessionId: string, scanId: string) => void
+  onRestoreScan?: (sessionId: string, scan: ScanRecord) => void
 }
 
 const SCANNER_STEPS = [
@@ -25,13 +29,14 @@ const SCANNER_STEPS = [
   { id: 'complete', label: 'Завершение', description: 'Финализация' }
 ]
 
-export function ScannerInterface({ session, onScan, onBack, isOnline, pendingScans }: ScannerInterfaceProps) {
+export function ScannerInterface({ session, onScan, onBack, isOnline, pendingScans, onDeleteScan, onRestoreScan }: ScannerInterfaceProps) {
   const [barcode, setBarcode] = useState('')
   const [quantity, setQuantity] = useState(1)
   const [lastScanned, setLastScanned] = useState<ProductReference | null>(null)
   const [showConfirm, setShowConfirm] = useState(false)
   const [isCameraActive, setIsCameraActive] = useState(true)
   const [currentStep, setCurrentStep] = useState(1)
+  const [deletedScans, setDeletedScans] = useKV<ScanRecord[]>(`deleted-scans-${session.id}`, [])
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -328,23 +333,25 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
         </AnimatePresence>
 
         {session.scans.length > 0 && (
-          <Card className="p-4 sm:p-5 md:p-6">
-            <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Последние сканирования</h3>
-            <div className="space-y-2 max-h-48 sm:max-h-64 overflow-y-auto">
-              {session.scans.slice(-10).reverse().map((scan, idx) => {
-                const product = session.products.find(p => p.barcode === scan.barcode)
-                return (
-                  <div key={idx} className="flex items-center justify-between p-2 sm:p-3 bg-secondary rounded gap-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm sm:text-base truncate">{product?.name || 'Неизвестный товар'}</div>
-                      <div className="text-xs sm:text-sm font-mono text-muted-foreground truncate">{scan.barcode}</div>
-                    </div>
-                    <div className="font-mono font-bold text-sm sm:text-base shrink-0">+{scan.actualQty}</div>
-                  </div>
-                )
-              })}
-            </div>
-          </Card>
+          <ScanHistory
+            scans={session.scans}
+            products={session.products}
+            deletedScans={deletedScans || []}
+            onDelete={(scanId) => {
+              const scan = session.scans.find(s => s.id === scanId)
+              if (scan) {
+                setDeletedScans(current => [...(current || []), scan])
+                onDeleteScan?.(session.id, scanId)
+              }
+            }}
+            onRestore={(scan) => {
+              setDeletedScans(current => (current || []).filter(s => s.id !== scan.id))
+              onRestoreScan?.(session.id, scan)
+            }}
+            onRepeat={(barcode, quantity) => {
+              onScan(barcode, quantity)
+            }}
+          />
         )}
       </div>
     </div>

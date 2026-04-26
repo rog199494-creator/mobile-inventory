@@ -144,6 +144,28 @@ function App() {
     )
   }
 
+  const handleDeleteScan = (sessionId: string, scanId: string) => {
+    setSessions(current =>
+      (current || []).map(s =>
+        s.id === sessionId ? { ...s, scans: s.scans.filter(scan => scan.id !== scanId) } : s
+      )
+    )
+    if (selectedSession && selectedSession.id === sessionId) {
+      setSelectedSession(prev => prev ? { ...prev, scans: prev.scans.filter(scan => scan.id !== scanId) } : null)
+    }
+  }
+
+  const handleRestoreScan = (sessionId: string, scan: ScanRecord) => {
+    setSessions(current =>
+      (current || []).map(s =>
+        s.id === sessionId ? { ...s, scans: [...s.scans, scan] } : s
+      )
+    )
+    if (selectedSession && selectedSession.id === sessionId) {
+      setSelectedSession(prev => prev ? { ...prev, scans: [...prev.scans, scan] } : null)
+    }
+  }
+
   const filteredSessions = (sessions || []).filter(s => 
     statusFilter === 'all' || s.status === statusFilter
   )
@@ -158,6 +180,8 @@ function App() {
           onBack={handleBackToDashboard}
           isOnline={isOnline}
           pendingScans={pendingScans}
+          onDeleteScan={handleDeleteScan}
+          onRestoreScan={handleRestoreScan}
         />
         <Toaster />
       </>
