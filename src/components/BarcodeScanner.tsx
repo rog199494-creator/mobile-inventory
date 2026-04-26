@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Html5Qrcode } from 'html5-qrcode'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { Camera, X, Lightbulb, LightbulbFilament, MagnifyingGlassMinus, MagnifyingGlassPlus } from '@phosphor-icons/react'
+import { X, Lightbulb, LightbulbFilament, MagnifyingGlassMinus, MagnifyingGlassPlus } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { useKV } from '@github/spark/hooks'
 import { Slider } from '@/components/ui/slider'
@@ -281,24 +280,15 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
   }
 
   if (!isActive) {
-    return (
-      <Button
-        className="w-full h-14 text-lg"
-        onClick={onToggle}
-        variant="secondary"
-      >
-        <Camera className="mr-2" size={24} />
-        Открыть камеру для сканирования
-      </Button>
-    )
+    return null
   }
 
   return (
-    <Card className="overflow-hidden">
-      <div className="relative">
+    <div className="h-full w-full relative bg-background">
+      <div className="relative h-full">
         <div 
           id={elementId}
-          className={`w-full ${isScanning ? 'ring-4 ring-success ring-offset-2' : ''} transition-all`}
+          className={`w-full h-full ${isScanning ? 'ring-4 ring-success ring-offset-2' : ''} transition-all`}
         />
         
         {error && (
@@ -389,6 +379,6 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
           </div>
         )}
       </div>
-    </Card>
+    </div>
   )
 }

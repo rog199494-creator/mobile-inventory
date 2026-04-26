@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Barcode, Plus, Minus, Check, WifiSlash, WifiHigh, ArrowLeft } from '@phosphor-icons/react'
+import { Barcode, Plus, Minus, Check, WifiSlash, WifiHigh, ArrowLeft, Camera } from '@phosphor-icons/react'
 import type { InventorySession, ProductReference } from '@/lib/types'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -30,7 +30,7 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
   const [quantity, setQuantity] = useState(1)
   const [lastScanned, setLastScanned] = useState<ProductReference | null>(null)
   const [showConfirm, setShowConfirm] = useState(false)
-  const [isCameraActive, setIsCameraActive] = useState(false)
+  const [isCameraActive, setIsCameraActive] = useState(true)
   const [currentStep, setCurrentStep] = useState(1)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -49,6 +49,10 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
       inputRef.current?.focus()
     }
   }, [showConfirm, isCameraActive])
+
+  useEffect(() => {
+    setIsCameraActive(true)
+  }, [])
 
   const handleScan = (scannedBarcode?: string) => {
     const codeToScan = scannedBarcode || barcode
@@ -74,8 +78,21 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
   }
 
   const handleCameraScan = (scannedBarcode: string) => {
-    setBarcode(scannedBarcode)
-    handleScan(scannedBarcode)
+    const product = session.products.find(p => p.barcode === scannedBarcode)
+    
+    onScan(scannedBarcode, quantity)
+    setLastScanned(product || { barcode: scannedBarcode, name: 'Неизвестный товар', expectedQty: 0, price: 0 })
+    
+    setIsCameraActive(false)
+    setShowConfirm(true)
+    
+    setTimeout(() => {
+      setShowConfirm(false)
+      setBarcode('')
+      setQuantity(1)
+    }, 2000)
+
+    toast.success(`Отсканировано: ${product?.name || 'Неизвестно'} (${quantity})`)
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -85,6 +102,83 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
   }
 
   const totalScanned = session.scans.reduce((sum, s) => sum + s.actualQty, 0)
+
+  if (isCameraActive) {
+    return (
+      <div className="fixed inset-0 z-50 bg-background">
+        <div className="h-full flex flex-col">
+          <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b px-3 py-2 sm:px-4 sm:py-3 shadow-sm">
+            <div className="flex items-center justify-between">
+              <Button variant="outline" size="sm" onClick={() => setIsCameraActive(false)}>
+                <ArrowLeft className="mr-1 sm:mr-2" size={16} />
+                Назад
+              </Button>
+              <Badge variant={isOnline ? 'default' : 'destructive'} className="px-2 py-1 text-xs sm:px-3">
+                {isOnline ? (
+                  <>
+                    <WifiHigh size={14} className="mr-1" />
+                    <span className="hidden sm:inline">Онлайн</span>
+                  </>
+                ) : (
+                  <>
+                    <WifiSlash size={14} className="mr-1" />
+                    <span className="hidden sm:inline">Офлайн</span> ({pendingScans})
+                  </>
+                )}
+              </Badge>
+            </div>
+          </div>
+
+          <div className="flex-1 flex flex-col">
+            <div className="px-3 py-3 sm:px-4 sm:py-4 bg-card border-b">
+              <h2 className="text-lg sm:text-xl font-bold mb-1">{session.name}</h2>
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <span>Позиций: {totalScanned}</span>
+                <span>Товаров: {new Set(session.scans.map(s => s.barcode)).size}</span>
+              </div>
+            </div>
+
+            <div className="px-3 py-2 sm:px-4 bg-card border-b">
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium">Количество:</label>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9 shrink-0"
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                >
+                  <Minus size={18} />
+                </Button>
+                <Input
+                  type="number"
+                  value={quantity}
+                  onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="text-center text-lg font-mono font-bold h-9 w-20"
+                  min="1"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9 shrink-0"
+                  onClick={() => setQuantity(quantity + 1)}
+                >
+                  <Plus size={18} />
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-hidden">
+              <BarcodeScanner
+                onScan={handleCameraScan}
+                isActive={isCameraActive}
+                onToggle={() => setIsCameraActive(!isCameraActive)}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5">
@@ -139,7 +233,7 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
                   size="icon"
                   className="h-12 w-12 sm:h-10 sm:w-10 shrink-0"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  disabled={showConfirm || isCameraActive}
+                  disabled={showConfirm}
                 >
                   <Minus size={20} />
                 </Button>
@@ -149,7 +243,7 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
                   value={quantity}
                   onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
                   className="text-center text-xl sm:text-2xl font-mono font-bold h-12 sm:h-14"
-                  disabled={showConfirm || isCameraActive}
+                  disabled={showConfirm}
                   min="1"
                 />
                 <Button
@@ -157,25 +251,28 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
                   size="icon"
                   className="h-12 w-12 sm:h-10 sm:w-10 shrink-0"
                   onClick={() => setQuantity(quantity + 1)}
-                  disabled={showConfirm || isCameraActive}
+                  disabled={showConfirm}
                 >
                   <Plus size={20} />
                 </Button>
               </div>
             </div>
 
-            <BarcodeScanner
-              onScan={handleCameraScan}
-              isActive={isCameraActive}
-              onToggle={() => setIsCameraActive(!isCameraActive)}
-            />
+            <Button
+              className="w-full h-16 text-lg"
+              onClick={() => setIsCameraActive(true)}
+              disabled={showConfirm}
+            >
+              <Camera className="mr-2" size={24} />
+              Сканировать штрихкод
+            </Button>
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">или</span>
+                <span className="bg-card px-2 text-muted-foreground">или ввести вручную</span>
               </div>
             </div>
 
@@ -190,14 +287,15 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
                 onKeyPress={handleKeyPress}
                 placeholder="Введите штрихкод..."
                 className="text-base sm:text-lg font-mono h-12 sm:h-14"
-                disabled={showConfirm || isCameraActive}
+                disabled={showConfirm}
               />
             </div>
 
             <Button
               className="w-full h-12 sm:h-14 text-base sm:text-lg"
               onClick={() => handleScan(undefined)}
-              disabled={showConfirm || isCameraActive}
+              disabled={showConfirm}
+              variant="secondary"
             >
               <Barcode className="mr-2" size={24} />
               Записать
