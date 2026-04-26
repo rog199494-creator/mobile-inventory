@@ -24,10 +24,10 @@ interface ScannerInterfaceProps {
 }
 
 const SCANNER_STEPS = [
-  { id: 'setup', label: 'Подготовка', description: 'Настройка сканера' },
-  { id: 'scanning', label: 'Сканирование', description: 'Процесс учёта' },
-  { id: 'review', label: 'Проверка', description: 'Контроль данных' },
-  { id: 'complete', label: 'Завершение', description: 'Финализация' }
+  { id: 'setup', label: 'Подготовка', description: 'Настройка сканера', mobileLabel: 'Подгот.' },
+  { id: 'scanning', label: 'Сканирование', description: 'Процесс учёта', mobileLabel: 'Сканир.' },
+  { id: 'review', label: 'Проверка', description: 'Контроль данных', mobileLabel: 'Проверка' },
+  { id: 'complete', label: 'Завершение', description: 'Финализация', mobileLabel: 'Заверш.' }
 ]
 
 export function ScannerInterface({ session, onScan, onBack, isOnline, pendingScans, onDeleteScan, onRestoreScan, onUpdateScanQuantity }: ScannerInterfaceProps) {
@@ -193,14 +193,14 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5">
-      <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b px-3 py-2 sm:px-4 sm:py-3 shadow-sm">
-        <div className="flex items-center justify-between">
-          <Button variant="outline" size="sm" onClick={onBack}>
-            <ArrowLeft className="mr-1 sm:mr-2" size={16} />
-            <span className="hidden sm:inline">Назад</span>
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5 pb-safe">
+      <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b px-3 py-3 sm:px-4 sm:py-3 shadow-sm">
+        <div className="flex items-center justify-between gap-2">
+          <Button variant="outline" size="default" onClick={onBack} className="h-10 sm:h-9">
+            <ArrowLeft className="mr-1 sm:mr-2" size={18} />
+            <span className="sm:inline">Назад</span>
           </Button>
-          <Badge variant={isOnline ? 'default' : 'destructive'} className="px-2 py-1 text-xs sm:px-3">
+          <Badge variant={isOnline ? 'default' : 'destructive'} className="px-2 py-1.5 text-xs sm:px-3 shrink-0">
             {isOnline ? (
               <>
                 <WifiHigh size={14} className="mr-1" />
@@ -216,23 +216,23 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
         </div>
       </div>
 
-      <div className="px-3 py-3 sm:px-4 sm:py-4 space-y-3 sm:space-y-4 max-w-2xl mx-auto pb-safe">
-        <Card className="p-3 sm:p-4 bg-card/80 backdrop-blur-sm">
+      <div className="px-3 py-3 sm:px-4 sm:py-4 space-y-3 sm:space-y-4 max-w-2xl mx-auto">
+        <Card className="p-3 sm:p-4 bg-card/80 backdrop-blur-sm overflow-x-auto">
           <StepIndicator steps={SCANNER_STEPS} currentStep={currentStep} />
         </Card>
 
         <Card className="p-4 sm:p-5 md:p-6">
-          <h2 className="text-xl sm:text-2xl font-bold mb-1">{session.name}</h2>
-          <p className="text-sm text-muted-foreground mb-4">{session.storeName}</p>
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-1 break-words">{session.name}</h2>
+          <p className="text-sm text-muted-foreground mb-4 break-words">{session.storeName}</p>
           
           <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <div className="p-3 sm:p-4 bg-secondary rounded-lg">
+            <div className="p-3 sm:p-4 bg-secondary rounded-lg min-w-0">
               <div className="text-xs sm:text-sm text-muted-foreground mb-1">Всего позиций</div>
-              <div className="text-2xl sm:text-3xl font-mono font-bold">{totalScanned}</div>
+              <div className="text-xl sm:text-2xl md:text-3xl font-mono font-bold break-all">{totalScanned}</div>
             </div>
-            <div className="p-3 sm:p-4 bg-secondary rounded-lg">
+            <div className="p-3 sm:p-4 bg-secondary rounded-lg min-w-0">
               <div className="text-xs sm:text-sm text-muted-foreground mb-1">Товаров</div>
-              <div className="text-2xl sm:text-3xl font-mono font-bold">{new Set(session.scans.map(s => s.barcode)).size}</div>
+              <div className="text-xl sm:text-2xl md:text-3xl font-mono font-bold break-all">{new Set(session.scans.map(s => s.barcode)).size}</div>
             </div>
           </div>
 
@@ -243,35 +243,35 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-12 w-12 sm:h-10 sm:w-10 shrink-0"
+                  className="h-14 w-14 sm:h-12 sm:w-12 shrink-0"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   disabled={showConfirm}
                 >
-                  <Minus size={20} />
+                  <Minus size={22} className="sm:w-5 sm:h-5" />
                 </Button>
                 <Input
                   id="quantity-input"
                   type="number"
                   value={quantity}
                   onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                  className="text-center text-xl sm:text-2xl font-mono font-bold h-12 sm:h-14"
+                  className="text-center text-2xl sm:text-3xl font-mono font-bold h-14 sm:h-16"
                   disabled={showConfirm}
                   min="1"
                 />
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-12 w-12 sm:h-10 sm:w-10 shrink-0"
+                  className="h-14 w-14 sm:h-12 sm:w-12 shrink-0"
                   onClick={() => setQuantity(quantity + 1)}
                   disabled={showConfirm}
                 >
-                  <Plus size={20} />
+                  <Plus size={22} className="sm:w-5 sm:h-5" />
                 </Button>
               </div>
             </div>
 
             <Button
-              className="w-full h-16 text-lg"
+              className="w-full h-14 sm:h-16 text-base sm:text-lg"
               onClick={() => setIsCameraActive(true)}
               disabled={showConfirm}
             >
