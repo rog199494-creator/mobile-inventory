@@ -20,6 +20,7 @@ interface ScannerInterfaceProps {
   pendingScans: number
   onDeleteScan?: (sessionId: string, scanId: string) => void
   onRestoreScan?: (sessionId: string, scan: ScanRecord) => void
+  onUpdateScanQuantity?: (sessionId: string, scanId: string, newQuantity: number) => void
 }
 
 const SCANNER_STEPS = [
@@ -29,7 +30,7 @@ const SCANNER_STEPS = [
   { id: 'complete', label: 'Завершение', description: 'Финализация' }
 ]
 
-export function ScannerInterface({ session, onScan, onBack, isOnline, pendingScans, onDeleteScan, onRestoreScan }: ScannerInterfaceProps) {
+export function ScannerInterface({ session, onScan, onBack, isOnline, pendingScans, onDeleteScan, onRestoreScan, onUpdateScanQuantity }: ScannerInterfaceProps) {
   const [barcode, setBarcode] = useState('')
   const [quantity, setQuantity] = useState(1)
   const [lastScanned, setLastScanned] = useState<ProductReference | null>(null)
@@ -55,11 +56,7 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
     }
   }, [session.scans.length, session.products.length])
 
-  useEffect(() => {
-    if (!isCameraActive) {
-      inputRef.current?.focus()
-    }
-  }, [showConfirm, isCameraActive])
+
 
   useEffect(() => {
     setIsCameraActive(true)
@@ -360,6 +357,9 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
             }}
             onRepeat={(barcode, quantity) => {
               onScan(barcode, quantity)
+            }}
+            onUpdateQuantity={(scanId, newQuantity) => {
+              onUpdateScanQuantity?.(session.id, scanId, newQuantity)
             }}
           />
         )}

@@ -3,7 +3,8 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Trash, ArrowCounterClockwise, Copy } from '@phosphor-icons/react'
+import { Input } from '@/components/ui/input'
+import { Trash, ArrowCounterClockwise, Copy, PencilSimple, X } from '@phosphor-icons/react'
 import type { ScanRecord, ProductReference } from '@/lib/types'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -24,6 +25,7 @@ interface ScanHistoryProps {
   onDelete: (scanId: string) => void
   onRestore: (scan: ScanRecord) => void
   onRepeat: (barcode: string, quantity: number) => void
+  onUpdateQuantity?: (scanId: string, newQuantity: number) => void
   deletedScans: ScanRecord[]
 }
 
@@ -33,10 +35,13 @@ export function ScanHistory({
   onDelete, 
   onRestore, 
   onRepeat,
+  onUpdateQuantity,
   deletedScans 
 }: ScanHistoryProps) {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
   const [showDeleted, setShowDeleted] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editValue, setEditValue] = useState<number>(1)
 
   const handleDelete = (scanId: string) => {
     onDelete(scanId)
@@ -51,7 +56,27 @@ export function ScanHistory({
 
   const handleRepeat = (barcode: string, quantity: number) => {
     onRepeat(barcode, quantity)
-    toast.success('Действие повторено')
+    toast.success('Повторено')
+  }
+
+  const startEdit = (scanId: string, currentQty: number) => {
+    setEditingId(scanId)
+    setEditValue(currentQty)
+  }
+
+  const cancelEdit = () => {
+    setEditingId(null)
+    setEditValue(1)
+  }
+
+  const saveEdit = (scanId: string) => {
+    if (editValue < 1) {
+      toast.error('Количество должно быть больше 0')
+      return
+    }
+    onUpdateQuantity?.(scanId, editValue)
+    setEditingId(null)
+    toast.success('Количество изменено')
   }
 
   const getProductInfo = (barcode: string) => {
@@ -87,6 +112,7 @@ export function ScanHistory({
           <AnimatePresence mode="popLayout">
             {!showDeleted && scans.slice().reverse().map((scan) => {
               const product = getProductInfo(scan.barcode)
+              const isEditing = editingId === scan.id
               return (
                 <motion.div
                   key={scan.id}
@@ -95,9 +121,9 @@ export function ScanHistory({
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
                   transition={{ duration: 0.2 }}
-                  className="mb-2"
+                  className="mb-2 sm:mb-3"
                 >
-                  <div className="flex items-start gap-2 p-2 sm:p-3 bg-secondary rounded-lg">
+                  <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-secondary rounded-lg">
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-sm sm:text-base truncate">
                         {product?.name || 'Неизвестный товар'}
@@ -114,30 +140,65 @@ export function ScanHistory({
                         })}
                       </div>
                     </div>
-                    <div className="flex flex-col items-end gap-1.5 shrink-0">
-                      <Badge variant="default" className="font-mono text-xs sm:text-sm px-2 py-0.5">
-                        +{scan.actualQty}
-                      </Badge>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 sm:h-8 sm:w-8"
-                          onClick={() => handleRepeat(scan.barcode, scan.actualQty)}
-                          title="Повторить действие"
-                        >
-                          <Copy size={14} />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 sm:h-8 sm:w-8 text-destructive hover:text-destructive"
-                          onClick={() => setDeleteConfirmId(scan.id)}
-                          title="Удалить запись"
-                        >
-                          <Trash size={14} />
-                        </Button>
-                      </div>
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      {isEditing ? (
+                        <div className="flex items-center gap-1.5">
+                          <Input
+                            type="number"
+                            value={editValue}
+                            onChange={(e) => setEditValue(Math.max(1, parseInt(e.target.value) || 1))}
+                            className="w-16 h-9 text-center font-mono text-sm"
+                            min="1"
+                            autoFocus
+                          />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 text-success hover:text-success"
+                            onClick={() => saveEdit(scan.id)}
+                          >
+                            <PencilSimple size={16} weight="fill" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9"
+                            onClick={cancelEdit}
+                          >
+                            <X size={16} />
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <Badge 
+                            variant="default" 
+                            className="font-mono text-sm sm:text-base px-2.5 py-1 cursor-pointer hover:bg-primary/80"
+                            onClick={() => startEdit(scan.id, scan.actualQty)}
+                          >
+                            +{scan.actualQty}
+                          </Badge>
+                          <div className="flex gap-1.5">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-9 w-9 sm:h-10 sm:w-10"
+                              onClick={() => handleRepeat(scan.barcode, scan.actualQty)}
+                              title="Повторить"
+                            >
+                              <Copy size={16} />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-9 w-9 sm:h-10 sm:w-10 text-destructive hover:text-destructive"
+                              onClick={() => setDeleteConfirmId(scan.id)}
+                              title="Отменить"
+                            >
+                              <Trash size={16} />
+                            </Button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 </motion.div>
@@ -154,9 +215,9 @@ export function ScanHistory({
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
                   transition={{ duration: 0.2 }}
-                  className="mb-2"
+                  className="mb-2 sm:mb-3"
                 >
-                  <div className="flex items-start gap-2 p-2 sm:p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                  <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
                     <div className="flex-1 min-w-0 opacity-60">
                       <div className="font-medium text-sm sm:text-base truncate line-through">
                         {product?.name || 'Неизвестный товар'}
@@ -173,17 +234,17 @@ export function ScanHistory({
                         })}
                       </div>
                     </div>
-                    <div className="flex flex-col items-end gap-1.5 shrink-0">
-                      <Badge variant="outline" className="font-mono text-xs sm:text-sm px-2 py-0.5 opacity-60">
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      <Badge variant="outline" className="font-mono text-sm sm:text-base px-2.5 py-1 opacity-60">
                         +{scan.actualQty}
                       </Badge>
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-7 text-xs"
+                        className="h-9 text-sm"
                         onClick={() => handleRestore(scan)}
                       >
-                        <ArrowCounterClockwise size={14} className="mr-1" />
+                        <ArrowCounterClockwise size={16} className="mr-1.5" />
                         Восстановить
                       </Button>
                     </div>

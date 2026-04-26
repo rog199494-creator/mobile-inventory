@@ -166,6 +166,22 @@ function App() {
     }
   }
 
+  const handleUpdateScanQuantity = (sessionId: string, scanId: string, newQuantity: number) => {
+    setSessions(current =>
+      (current || []).map(s =>
+        s.id === sessionId 
+          ? { ...s, scans: s.scans.map(scan => scan.id === scanId ? { ...scan, actualQty: newQuantity } : scan) } 
+          : s
+      )
+    )
+    if (selectedSession && selectedSession.id === sessionId) {
+      setSelectedSession(prev => prev ? { 
+        ...prev, 
+        scans: prev.scans.map(scan => scan.id === scanId ? { ...scan, actualQty: newQuantity } : scan) 
+      } : null)
+    }
+  }
+
   const filteredSessions = (sessions || []).filter(s => 
     statusFilter === 'all' || s.status === statusFilter
   )
@@ -182,6 +198,7 @@ function App() {
           pendingScans={pendingScans}
           onDeleteScan={handleDeleteScan}
           onRestoreScan={handleRestoreScan}
+          onUpdateScanQuantity={handleUpdateScanQuantity}
         />
         <Toaster />
       </>
@@ -239,10 +256,10 @@ function App() {
         <div className="px-3 py-4 sm:px-4 sm:py-6">
           <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)} className="mb-4 sm:mb-6">
             <TabsList className="w-full grid grid-cols-2 sm:grid-cols-4 h-auto">
-              <TabsTrigger value="all" className="text-xs sm:text-sm py-2">Все</TabsTrigger>
-              <TabsTrigger value="active" className="text-xs sm:text-sm py-2">Активные</TabsTrigger>
-              <TabsTrigger value="planned" className="text-xs sm:text-sm py-2">Планы</TabsTrigger>
-              <TabsTrigger value="completed" className="text-xs sm:text-sm py-2">Готово</TabsTrigger>
+              <TabsTrigger value="all" className="text-xs sm:text-sm py-2.5 sm:py-2">Все</TabsTrigger>
+              <TabsTrigger value="active" className="text-xs sm:text-sm py-2.5 sm:py-2">Активные</TabsTrigger>
+              <TabsTrigger value="planned" className="text-xs sm:text-sm py-2.5 sm:py-2">Планы</TabsTrigger>
+              <TabsTrigger value="completed" className="text-xs sm:text-sm py-2.5 sm:py-2">Завершены</TabsTrigger>
             </TabsList>
           </Tabs>
 
