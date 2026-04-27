@@ -24,7 +24,7 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': {
+      '/bitrix': {
         target: 'https://minitest.bitrixabd.ru',
         changeOrigin: true,
         secure: true,
