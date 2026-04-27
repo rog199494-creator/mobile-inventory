@@ -20,6 +20,13 @@ interface TelegramWebApp {
     onClick: (callback: () => void) => void
     offClick: (callback: () => void) => void
   }
+  BackButton?: {
+    isVisible: boolean
+    show: () => void
+    hide: () => void
+    onClick: (callback: () => void) => void
+    offClick: (callback: () => void) => void
+  }
   initData: string
   initDataUnsafe: {
     user?: {

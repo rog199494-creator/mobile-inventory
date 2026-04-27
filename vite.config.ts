@@ -22,4 +22,13 @@ export default defineConfig({
       '@': resolve(projectRoot, 'src')
     }
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://minitest.bitrixabd.ru',
+        changeOrigin: true,
+        secure: true,
+      },
+    },
+  },
 });
