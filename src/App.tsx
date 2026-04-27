@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Toaster } from '@/components/ui/sonner'
+import { ThemeDebugger } from '@/components/ThemeDebugger'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Plus, Info, Upload, Buildings } from '@phosphor-icons/react'
@@ -294,6 +295,7 @@ function App() {
           </div>
           <StoresScreen onSelectStore={handleSelectStore} />
         </div>
+        <ThemeDebugger />
         <Toaster />
       </>
     )
@@ -328,6 +330,7 @@ function App() {
           onRestoreScan={handleRestoreScan}
           onUpdateScanQuantity={handleUpdateScanQuantity}
         />
+        <ThemeDebugger />
         <Toaster />
       </>
     )
@@ -342,6 +345,7 @@ function App() {
           onBack={handleBackToDashboard}
           onComplete={handleCompleteSession}
         />
+        <ThemeDebugger />
         <Toaster />
       </>
     )
@@ -446,6 +450,7 @@ function App() {
         onConfirm={handleOneCImport}
       />
 
+      <ThemeDebugger />
       <Toaster />
     </>
   )

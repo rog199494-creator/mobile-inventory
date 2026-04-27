@@ -148,3 +148,74 @@ app.use(cors({
 - [Telegram Mini Apps — официальная документация](https://core.telegram.org/bots/webapps)
 - [Валидация initData](https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app)
 - [BotFather](https://t.me/BotFather)
+
+---
+
+## 6. Тема и цвета
+
+### Как тема пробрасывается в приложение
+
+При запуске внутри Telegram `initTelegram()` (вызывается в `src/main.tsx`) выполняет следующее:
+
+1. Читает `tg.colorScheme` (`'light' | 'dark'`) и выставляет на `<html>`:
+   - `data-theme="dark"` / `data-theme="light"` — для наших CSS-правил
+   - `data-appearance="dark"` / `data-appearance="light"` — для Tailwind `dark:` utilities
+
+2. Берёт `tg.themeParams` (HEX-цвета) и записывает их двумя способами:
+   - CSS-переменные `--tg-*` (оригинальные HEX-значения, не трогать)
+   - Прямое переопределение shadcn/Tailwind-токенов (`--background`, `--foreground`, `--primary` и т.д.) — CSS поддерживает HEX напрямую
+
+3. Подписывается на `tg.onEvent('themeChanged', ...)` — при смене темы в Telegram (например, пользователь переключился с тёмной на светлую) все переменные обновляются автоматически.
+
+При запуске вне Telegram:
+- Читает системную тему через `window.matchMedia('(prefers-color-scheme: dark)')` и выставляет `data-theme` соответственно.
+- Следит за изменениями системной темы.
+
+### Fallback-значения
+
+В `src/main.css` объявлены CSS-правила:
+
+```css
+:root          { /* светлые oklch-значения по умолчанию */ }
+[data-theme="dark"] { /* тёмные oklch-значения по умолчанию */ }
+```
+
+Если Telegram не прислал `themeParams` (или приложение запущено в браузере без TG) — используются эти значения.
+
+### Тестирование темы локально
+
+#### Debug-панель (только `npm run dev`)
+
+В правом нижнем углу отображается плавающая панель **ThemeDebugger** с тремя кнопками:
+
+| Кнопка | Действие |
+|--------|----------|
+| **Light** | Принудительно ставит `data-theme="light"`, сбрасывает все `--tg-*` переменные |
+| **Dark** | Ставит `data-theme="dark"`, сбрасывает `--tg-*` |
+| **Telegram** | Применяет правдоподобную Telegram-палитру (реальную, если в Telegram; мок `#2481cc`-тему, если в браузере) |
+
+В production-сборке (`npm run build`) компонент не попадает в бандл.
+
+#### Query-параметр `?theme=`
+
+Поддерживаются значения:
+
+```
+https://your-app.example/?theme=dark     → тёмная тема (без TG-цветов)
+https://your-app.example/?theme=light    → светлая тема
+https://your-app.example/?theme=tg       → мок Telegram-темы (цвета Telegram Desktop)
+```
+
+Удобно для скриншотов, демонстрации и визуальных тестов.
+
+#### Пример Telegram Desktop цветов (мок)
+
+| Переменная | Light | Dark |
+|---|---|---|
+| `--tg-bg-color` | `#ffffff` | `#17212b` |
+| `--tg-text-color` | `#000000` | `#f5f5f5` |
+| `--tg-secondary-bg-color` | `#f1f1f1` | `#232e3c` |
+| `--tg-button-color` | `#2481cc` | `#5288c1` |
+| `--tg-hint-color` | `#707579` | `#708499` |
+| `--tg-link-color` | `#2481cc` | `#6ab3f3` |
+

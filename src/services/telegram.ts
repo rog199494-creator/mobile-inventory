@@ -7,25 +7,214 @@
 
 export const tg = window.Telegram?.WebApp
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Тема: CSS-переменные и data-theme / data-appearance
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** CSS-переменные Telegram, выставляемые сервисом */
+const TG_CSS_VARS = [
+  '--tg-bg-color',
+  '--tg-text-color',
+  '--tg-button-color',
+  '--tg-button-text-color',
+  '--tg-hint-color',
+  '--tg-link-color',
+  '--tg-secondary-bg-color',
+  '--tg-accent-text-color',
+  '--tg-section-separator-color',
+] as const
+
+/** shadcn/Tailwind-токены, переопределяемые при Telegram-теме */
+const THEME_OVERRIDE_VARS = [
+  '--background',
+  '--foreground',
+  '--card',
+  '--card-foreground',
+  '--popover',
+  '--popover-foreground',
+  '--primary',
+  '--primary-foreground',
+  '--secondary',
+  '--secondary-foreground',
+  '--muted',
+  '--muted-foreground',
+  '--accent',
+  '--accent-foreground',
+  '--border',
+  '--input',
+  '--ring',
+] as const
+
+/** Правдоподобные Telegram Desktop цвета для эмуляции вне Telegram */
+const TG_MOCK_COLORS = {
+  light: {
+    bg_color: '#ffffff',
+    text_color: '#000000',
+    secondary_bg_color: '#f1f1f1',
+    button_color: '#2481cc',
+    button_text_color: '#ffffff',
+    hint_color: '#707579',
+    link_color: '#2481cc',
+  },
+  dark: {
+    bg_color: '#17212b',
+    text_color: '#f5f5f5',
+    secondary_bg_color: '#232e3c',
+    button_color: '#5288c1',
+    button_text_color: '#ffffff',
+    hint_color: '#708499',
+    link_color: '#6ab3f3',
+  },
+} as const
+
+type TgColors = {
+  bg_color?: string
+  text_color?: string
+  secondary_bg_color?: string
+  button_color?: string
+  button_text_color?: string
+  hint_color?: string
+  link_color?: string
+  accent_text_color?: string
+  section_separator_color?: string
+}
+
+/** Применяет переменные --tg-* и соответствующие shadcn-токены */
+function applyTgVars(params: TgColors): void {
+  const root = document.documentElement
+  const set = (name: string, value?: string) => {
+    if (value) root.style.setProperty(name, value)
+  }
+
+  // --tg-* переменные (HEX)
+  set('--tg-bg-color', params.bg_color)
+  set('--tg-text-color', params.text_color)
+  set('--tg-button-color', params.button_color)
+  set('--tg-button-text-color', params.button_text_color)
+  set('--tg-hint-color', params.hint_color)
+  set('--tg-link-color', params.link_color)
+  set('--tg-secondary-bg-color', params.secondary_bg_color)
+  set('--tg-accent-text-color', params.accent_text_color)
+  set('--tg-section-separator-color', params.section_separator_color)
+
+  // Переопределить shadcn-токены (CSS поддерживает HEX напрямую)
+  set('--background', params.bg_color)
+  set('--foreground', params.text_color)
+
+  const cardBg = params.secondary_bg_color ?? params.bg_color
+  set('--card', cardBg)
+  set('--card-foreground', params.text_color)
+  set('--popover', cardBg)
+  set('--popover-foreground', params.text_color)
+  set('--secondary', cardBg)
+  set('--secondary-foreground', params.hint_color ?? params.text_color)
+  set('--muted', cardBg)
+  set('--muted-foreground', params.hint_color)
+
+  set('--primary', params.button_color)
+  set('--primary-foreground', params.button_text_color)
+
+  const accentColor = params.accent_text_color ?? params.link_color ?? params.button_color
+  set('--accent', accentColor)
+  set('--accent-foreground', params.button_text_color)
+
+  set('--border', params.section_separator_color ?? params.secondary_bg_color)
+  set('--input', params.secondary_bg_color)
+  set('--ring', params.button_color)
+}
+
+/** Выставляет data-theme и data-appearance на <html> */
+function setThemeAttributes(scheme: 'light' | 'dark'): void {
+  document.documentElement.dataset.theme = scheme
+  document.documentElement.dataset.appearance = scheme
+}
+
+/** Очищает все inline CSS-переменные темы Telegram и shadcn-переопределений */
+export function clearTgThemeVars(): void {
+  const root = document.documentElement
+  TG_CSS_VARS.forEach(v => root.style.removeProperty(v))
+  THEME_OVERRIDE_VARS.forEach(v => root.style.removeProperty(v))
+}
+
+/**
+ * Эмулирует тему Telegram Desktop с правдоподобными цветами.
+ * Полезно для разработки и тестирования вне Telegram.
+ */
+export function applyMockTelegramTheme(scheme: 'light' | 'dark'): void {
+  setThemeAttributes(scheme)
+  applyTgVars(TG_MOCK_COLORS[scheme])
+}
+
+/**
+ * Применяет тему из реального tg.themeParams (если в Telegram)
+ * или мок-цвета (если вне Telegram).
+ */
+export function applyTelegramTheme(): void {
+  if (tg) {
+    const scheme = tg.colorScheme ?? 'light'
+    setThemeAttributes(scheme)
+    if (tg.themeParams) {
+      applyTgVars(tg.themeParams)
+    }
+  } else {
+    const systemScheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    applyMockTelegramTheme(systemScheme)
+  }
+}
+
 /**
  * Инициализирует Telegram WebApp:
  * - сообщает платформе, что приложение готово (`ready()`)
  * - разворачивает на весь экран (`expand()`)
  * - применяет цвета темы к CSS-переменным
+ * - подписывается на событие смены темы
+ * - поддерживает query-параметр `?theme=dark|light|tg`
  */
 export function initTelegram(): void {
-  if (!tg) return
+  // Query-параметр ?theme= имеет наивысший приоритет
+  const queryTheme = new URLSearchParams(window.location.search).get('theme') as
+    | 'light'
+    | 'dark'
+    | 'tg'
+    | null
 
-  tg.ready()
-  tg.expand()
+  if (tg) {
+    tg.ready()
+    tg.expand()
+  }
 
-  const { themeParams } = tg
-  if (themeParams) {
-    const root = document.documentElement
-    if (themeParams.bg_color) root.style.setProperty('--tg-bg-color', themeParams.bg_color)
-    if (themeParams.text_color) root.style.setProperty('--tg-text-color', themeParams.text_color)
-    if (themeParams.button_color) root.style.setProperty('--tg-button-color', themeParams.button_color)
-    if (themeParams.button_text_color) root.style.setProperty('--tg-button-text-color', themeParams.button_text_color)
+  if (queryTheme === 'tg') {
+    const systemScheme = window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'dark'
+      : 'light'
+    applyMockTelegramTheme(systemScheme)
+    return
+  }
+
+  if (queryTheme === 'dark' || queryTheme === 'light') {
+    setThemeAttributes(queryTheme)
+    return
+  }
+
+  if (tg) {
+    const applyCurrentTheme = () => {
+      const scheme = tg.colorScheme ?? 'light'
+      setThemeAttributes(scheme)
+      if (tg.themeParams) {
+        applyTgVars(tg.themeParams)
+      }
+    }
+
+    applyCurrentTheme()
+    tg.onEvent('themeChanged', applyCurrentTheme)
+  } else {
+    // Вне Telegram — системная тема
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    setThemeAttributes(mq.matches ? 'dark' : 'light')
+
+    mq.addEventListener('change', e => {
+      setThemeAttributes(e.matches ? 'dark' : 'light')
+    })
   }
 }
 
