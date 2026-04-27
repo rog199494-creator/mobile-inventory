@@ -7,6 +7,8 @@ A professional mobile inventory management system that transforms smartphones in
 ✅ **Session Management** - Create and manage multiple inventory counting sessions
 ✅ **Excel/CSV Import** - Upload your expected inventory from spreadsheets
 ✅ **1С / SAP Integration** - File-based exchange with 1С Розница and SAP (CSV + XLSX, no network required)
+✅ **Server Integration** - Connect to client's Bitrix24-integrated Node.js server
+✅ **Telegram Mini App** - Run inside Telegram with native UI and auth
 ✅ **Mobile Scanner** - Scan barcodes and record quantities on any device
 ✅ **Offline Support** - Continue scanning even without internet connection
 ✅ **Real-time Progress** - Monitor scanning progress across multiple users
@@ -130,6 +132,48 @@ The application includes 3 demo sessions:
 | XLSX / XLS | ✅ | ✅ |
 
 Приложение работает **полностью офлайн** — интеграция не требует сети.
+
+## Подключение к серверу клиента
+
+Приложение умеет подключаться к серверу клиента (Node.js + Express, интегрированному с Bitrix24) для получения списка объектов, финансов и данных ККТ.
+
+### Переменные окружения
+
+Скопируйте `.env.example` в `.env.local` и заполните:
+
+```
+VITE_API_BASE_URL=https://minitest.bitrixabd.ru/api/bitrix
+VITE_DEBUG_USER_ID=<ваш_id_для_отладки>
+```
+
+### Dev-прокси (обход CORS при локальной разработке)
+
+Запросы `/api/*` автоматически проксируются через Vite на `https://minitest.bitrixabd.ru`. Дополнительная настройка не нужна.
+
+```bash
+npm run dev
+# Запросы к /api/bitrix/* → https://minitest.bitrixabd.ru/api/bitrix/*
+```
+
+### Документация API
+
+Полный контракт всех эндпоинтов — в **[docs/API_CONTRACT.md](docs/API_CONTRACT.md)**.
+
+### Экран «Объекты»
+
+Нажмите кнопку **«Объекты»** на главном экране для:
+- Проверки соединения с сервером (`ping`)
+- Загрузки списка компаний и объектов (`getStores`)
+
+## Запуск как Telegram Mini App
+
+Приложение поддерживает запуск внутри Telegram через `@ab_mini_test_bot`.
+
+- При запуске в Telegram автоматически применяется тема, приложение разворачивается на весь экран.
+- Авторизация запросов к серверу — через стандартный заголовок `Authorization: tma <initData>`.
+- При запуске в браузере (разработка) — graceful fallback без ошибок.
+
+Инструкция по настройке бота и валидации `initData` — в **[docs/TELEGRAM_MINIAPP.md](docs/TELEGRAM_MINIAPP.md)**.
 
 ## Technical Notes
 

@@ -3,13 +3,14 @@ import { useKV } from '@github/spark/hooks'
 import { Toaster } from '@/components/ui/sonner'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Plus, Info, Upload } from '@phosphor-icons/react'
+import { Plus, Info, Upload, Buildings } from '@phosphor-icons/react'
 import { SessionCard } from '@/components/SessionCard'
 import { ScannerInterface } from '@/components/ScannerInterface'
 import { VarianceAnalysis } from '@/components/VarianceAnalysis'
 import { NewSessionDialog } from '@/components/NewSessionDialog'
 import { OneCImportDialog } from '@/components/OneCImportDialog'
 import { ProcessGuide } from '@/components/ProcessGuide'
+import { StoresScreen } from '@/components/StoresScreen'
 import type { InventorySession, ProductReference, ScanRecord } from '@/lib/types'
 import type { OneCProduct } from '@/services/fileExchange'
 import { toast } from 'sonner'
@@ -22,7 +23,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 
-type View = 'dashboard' | 'scanner' | 'analysis'
+type View = 'dashboard' | 'scanner' | 'analysis' | 'stores'
 
 function App() {
   const [sessions, setSessions] = useKV<InventorySession[]>('inventory-sessions', [])
@@ -219,6 +220,30 @@ function App() {
     statusFilter === 'all' || s.status === statusFilter
   )
 
+  if (currentView === 'stores') {
+    return (
+      <>
+        <div className="min-h-screen bg-background pb-safe">
+          <div className="border-b bg-card sticky top-0 z-10 shadow-sm">
+            <div className="px-3 py-3 sm:px-4 sm:py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-xl sm:text-2xl font-bold tracking-tight truncate">Объекты</h1>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 hidden sm:block">Компании и объекты из системы клиента</p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setCurrentView('dashboard')} className="ml-2 shrink-0">
+                  ← Назад
+                </Button>
+              </div>
+            </div>
+          </div>
+          <StoresScreen />
+        </div>
+        <Toaster />
+      </>
+    )
+  }
+
   if (currentView === 'scanner' && selectedSession) {
     const currentSession = (sessions || []).find(s => s.id === selectedSession.id) || selectedSession
     return (
@@ -281,6 +306,15 @@ function App() {
               <Button onClick={() => setNewSessionOpen(true)} size="default" className="w-full sm:w-auto">
                 <Plus className="mr-2" size={20} />
                 Новая сессия
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setCurrentView('stores')}
+                size="default"
+                className="w-full sm:w-auto"
+              >
+                <Buildings className="mr-2" size={20} />
+                Объекты
               </Button>
               <Button
                 variant="outline"
