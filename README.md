@@ -6,6 +6,7 @@ A professional mobile inventory management system that transforms smartphones in
 
 ✅ **Session Management** - Create and manage multiple inventory counting sessions
 ✅ **Excel/CSV Import** - Upload your expected inventory from spreadsheets
+✅ **1С / SAP Integration** - File-based exchange with 1С Розница and SAP (CSV + XLSX, no network required)
 ✅ **Mobile Scanner** - Scan barcodes and record quantities on any device
 ✅ **Offline Support** - Continue scanning even without internet connection
 ✅ **Real-time Progress** - Monitor scanning progress across multiple users
@@ -85,6 +86,50 @@ The application includes 3 demo sessions:
 1. **Active Session** - Currently in progress with partial scans
 2. **Completed Session** - Finished inventory with all variances calculated
 3. **Planned Session** - Ready to start, no scans yet
+
+## Интеграция с 1С (файлы)
+
+Приложение поддерживает файловый обмен с **1С: Розница**, **1С: УТ**, **1С: УНФ** и **SAP** — без сетевых подключений, паролей и HTTP-сервисов.
+
+### Принцип работы
+
+```
+[1С] → экспортировать остатки → файл CSV/XLSX → загрузить в приложение
+[Приложение] → результаты ревизии → файл CSV/XLSX → загрузить в 1С
+```
+
+### Кнопка «Импорт из 1С»
+
+1. В главном экране нажмите **«Импорт из 1С»**.
+2. Выберите файл CSV или XLSX с остатками, выгруженный из 1С.
+3. Приложение покажет превью: количество найденных позиций, название склада и список ошибочных строк (если есть).
+4. Нажмите **«Начать ревизию»** — сессия создаётся автоматически.
+
+### Кнопка «Экспорт для 1С»
+
+После завершения ревизии в экране анализа нажмите:
+- **«1С CSV»** — скачать файл результатов в формате CSV (UTF-8 BOM, разделитель `;`)
+- **«1С XLSX»** — скачать файл результатов в формате Excel
+
+Файл именуется автоматически: `revision-<Склад>-<YYYY-MM-DD>.csv|xlsx`
+
+### Формат файлов
+
+Подробная спецификация формата — в документе **[docs/1C_FILE_FORMAT.md](docs/1C_FILE_FORMAT.md)**:
+- Описание колонок импорта и экспорта
+- Примеры CSV и XLSX
+- Инструкция «Как выгрузить остатки из 1С Розница»
+- Инструкция «Как загрузить результаты в 1С»
+
+### Поддерживаемые форматы
+
+| Формат | Импорт | Экспорт |
+|--------|:------:|:-------:|
+| CSV (`;`) | ✅ | ✅ |
+| CSV (`,`) | ✅ | — |
+| XLSX / XLS | ✅ | ✅ |
+
+Приложение работает **полностью офлайн** — интеграция не требует сети.
 
 ## Technical Notes
 

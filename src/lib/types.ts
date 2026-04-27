@@ -18,6 +18,12 @@ export interface ScanRecord {
   isSynced: boolean
 }
 
+export interface OneCImportMeta {
+  warehouse?: string
+  importedAt: number
+  productCount: number
+}
+
 export interface InventorySession {
   id: string
   name: string
@@ -28,6 +34,7 @@ export interface InventorySession {
   completedAt?: number
   products: ProductReference[]
   scans: ScanRecord[]
+  importMeta?: OneCImportMeta
 }
 
 export interface VarianceItem {

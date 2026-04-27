@@ -14,9 +14,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Download, TrendUp, TrendDown, Warning, CheckCircle, Lock, FileXls } from '@phosphor-icons/react'
+import { Download, TrendUp, TrendDown, Warning, CheckCircle, Lock, FileXls, FileCsv } from '@phosphor-icons/react'
 import type { InventorySession, VarianceItem } from '@/lib/types'
 import { calculateVariances, calculateSummary, generateExcelCSV, generateExcelFile, downloadCSV, formatNumber, formatCurrency, formatDate } from '@/lib/inventory'
+import { exportToCSV, exportToXLSX, downloadBlob } from '@/services/fileExchange'
+import type { RevisionResultRow } from '@/services/fileExchange'
 import { toast } from 'sonner'
 
 interface VarianceAnalysisProps {
@@ -49,6 +51,48 @@ export function VarianceAnalysis({ session, onBack, onComplete }: VarianceAnalys
       toast.success('Excel файл загружен')
     } catch (error) {
       toast.error('Ошибка при создании Excel файла')
+    }
+  }
+
+  const buildRevisionRows = (): RevisionResultRow[] =>
+    variances.map(v => ({
+      sku: v.barcode,
+      barcode: v.barcode,
+      name: v.name,
+      expectedQty: v.expectedQty,
+      actualQty: v.actualQty,
+      diff: v.variance,
+    }))
+
+  const exportFilename = (ext: string) => {
+    const warehouse = session.importMeta?.warehouse ?? session.storeName
+    const date = new Date().toISOString().split('T')[0]
+    return `revision-${warehouse}-${date}.${ext}`
+  }
+
+  const handleExportOneCCSV = () => {
+    try {
+      const blob = exportToCSV(buildRevisionRows(), {
+        warehouse: session.importMeta?.warehouse ?? session.storeName,
+        date: new Date(),
+      })
+      downloadBlob(blob, exportFilename('csv'))
+      toast.success('CSV для 1С загружен')
+    } catch {
+      toast.error('Ошибка при создании CSV')
+    }
+  }
+
+  const handleExportOneCXLSX = () => {
+    try {
+      const blob = exportToXLSX(buildRevisionRows(), {
+        warehouse: session.importMeta?.warehouse ?? session.storeName,
+        date: new Date(),
+      })
+      downloadBlob(blob, exportFilename('xlsx'))
+      toast.success('XLSX для 1С загружен')
+    } catch {
+      toast.error('Ошибка при создании XLSX')
     }
   }
 
@@ -96,6 +140,14 @@ export function VarianceAnalysis({ session, onBack, onComplete }: VarianceAnalys
             <Button variant="outline" size="default" onClick={handleExportExcel} className="flex-1 sm:flex-none min-w-[100px] h-10 sm:h-9">
               <FileXls className="mr-1 sm:mr-2" size={18} />
               Excel
+            </Button>
+            <Button variant="outline" size="default" onClick={handleExportOneCCSV} className="flex-1 sm:flex-none min-w-[100px] h-10 sm:h-9">
+              <FileCsv className="mr-1 sm:mr-2" size={18} />
+              1С CSV
+            </Button>
+            <Button variant="outline" size="default" onClick={handleExportOneCXLSX} className="flex-1 sm:flex-none min-w-[100px] h-10 sm:h-9">
+              <FileXls className="mr-1 sm:mr-2" size={18} />
+              1С XLSX
             </Button>
             {!isCompleted && (
               <Button size="default" onClick={() => setShowCompleteDialog(true)} className="flex-1 sm:flex-none min-w-[120px] h-10 sm:h-9">

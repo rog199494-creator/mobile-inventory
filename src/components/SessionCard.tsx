@@ -2,7 +2,7 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { Barcode, Users, Package } from '@phosphor-icons/react'
+import { Barcode, Users, Package, Buildings } from '@phosphor-icons/react'
 import type { InventorySession, SessionStatus } from '@/lib/types'
 import { formatDate } from '@/lib/inventory'
 
@@ -46,6 +46,16 @@ export function SessionCard({ session, onView, onScan }: SessionCardProps) {
           {getStatusLabel(session.status)}
         </Badge>
       </div>
+
+      {session.importMeta && (
+        <div className="flex items-center gap-1.5 text-xs text-primary bg-primary/8 rounded-md px-2 py-1.5 mb-3 sm:mb-4">
+          <Buildings size={13} className="shrink-0" />
+          <span className="truncate">
+            Импортировано из 1С: {session.importMeta.productCount.toLocaleString('ru-RU')} позиций
+            {session.importMeta.warehouse ? `, склад: ${session.importMeta.warehouse}` : ''}
+          </span>
+        </div>
+      )}
 
       <div className="space-y-2 sm:space-y-3 mb-3 sm:mb-4">
         <div className="flex items-center gap-2 text-xs sm:text-sm">
