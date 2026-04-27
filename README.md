@@ -19,26 +19,22 @@ A professional mobile inventory management system that transforms smartphones in
 
 ### 1. Create a New Session
 
-Click "New Session" and provide:
-- Session name (e.g., "Monthly Inventory - January 2024")
-- Store/location name (manual entry or via Telegram Mini App)
-- Upload a CSV file with your expected inventory
+Click **«Новая сессия»** and:
+- Enter a session name (e.g., "Инвентаризация — Январь 2024")
+- Optionally select an **object** (location) from the Bitrix list — grouped by company.
+  - If your object is not yet loaded, simply skip the selection.
+- Upload a CSV file with your expected inventory (or skip and add products later)
 
-#### Store Selection Options
+### 2. Selecting an Object (Optional)
 
-**Option A: Manual Entry**
-Simply type the store name directly into the "Store/location" field.
+Objects are loaded from the connected Bitrix server via `api.getStores()` and displayed grouped by company.
 
-**Option B: Telegram Mini App Integration** (Available when running in Telegram)
-1. Enter the URL of your store management mini app (e.g., `https://t.me/your_store_bot/app`)
-2. Click "Select store from app"
-3. Your external store app will open
-4. Select the desired store
-5. Store name and ID will automatically populate
+- **With object selected** — `storeId`, `storeName`, `storeAddress`, `companyId`, `companyName` are saved to the session.
+- **Without object** — the session is created without location binding; the card shows "Объект не указан".
 
-The app URL is saved for future use. See [TELEGRAM_INTEGRATION.md](TELEGRAM_INTEGRATION.md) for implementation details.
+You can also create sessions by going to **«Объекты»** → select a company → select an object → **«Начать инвентаризацию»**.
 
-### 2. CSV File Format
+### 3. CSV File Format
 
 Your CSV should have the following columns:
 
@@ -55,39 +51,36 @@ Barcode,Product Name,Expected Qty,Price
 - `Expected Qty` - Current book inventory quantity
 - `Price` - Unit price (for calculating variance value)
 
-### 3. Start Scanning
+### 4. Start Scanning
 
-- Select an active session and click "Scan"
-- Enter barcodes manually or scan with camera (simulation mode)
+- Select an active session and click "Сканировать"
+- Enter barcodes manually or scan with camera
 - Adjust quantities using +/- buttons
 - System automatically tracks:
   - Total items scanned
   - Unique products counted
   - Scanning progress percentage
 
-### 4. Offline Mode
+### 5. Offline Mode
 
 The app works without internet:
 - All scans are saved locally
 - Offline indicator shows pending sync count
 - Automatic sync when connection restored
 
-### 5. View Results
+### 6. View Results
 
-Click "View Details" on any session to see:
-- **Shortages** - Items with less stock than expected (highlighted red)
-- **Surpluses** - Items with more stock than expected (highlighted green)
-- **Unknown** - Items scanned but not in original list (highlighted amber)
-- **Matches** - Items with exact quantities
+Click "Подробнее" on any session to see:
+- **Недостача** - Items with less stock than expected (highlighted red)
+- **Излишки** - Items with more stock than expected (highlighted green)
+- **Неизвестные** - Items scanned but not in original list (highlighted amber)
+- **Совпадения** - Items with exact quantities
 
-Export results as CSV for uploading to your accounting system.
+Export results as CSV or XLSX for uploading to your accounting system.
 
-## Sample Data
+### 7. Clear All Sessions
 
-The application includes 3 demo sessions:
-1. **Active Session** - Currently in progress with partial scans
-2. **Completed Session** - Finished inventory with all variances calculated
-3. **Planned Session** - Ready to start, no scans yet
+In the header click **«Очистить все»** to delete all saved sessions (with confirmation dialog). The button is disabled when there are no sessions.
 
 ## Интеграция с 1С (файлы)
 

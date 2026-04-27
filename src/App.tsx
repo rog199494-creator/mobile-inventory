@@ -4,7 +4,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { ThemeDebugger } from '@/components/ThemeDebugger'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Plus, Info, Upload, Buildings } from '@phosphor-icons/react'
+import { Plus, Info, Upload, Buildings, Trash } from '@phosphor-icons/react'
 import { SessionCard } from '@/components/SessionCard'
 import { ScannerInterface } from '@/components/ScannerInterface'
 import { VarianceAnalysis } from '@/components/VarianceAnalysis'
@@ -25,6 +25,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 type View = 'dashboard' | 'scanner' | 'analysis' | 'stores' | 'store-detail'
 
@@ -36,6 +46,7 @@ function App() {
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
   const [newSessionOpen, setNewSessionOpen] = useState(false)
   const [oneCImportOpen, setOneCImportOpen] = useState(false)
+  const [clearSessionsOpen, setClearSessionsOpen] = useState(false)
   const [isOnline, setIsOnline] = useState(navigator.onLine)
   const [pendingScans, setPendingScans] = useState(0)
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'planned' | 'completed'>('all')
@@ -64,15 +75,23 @@ function App() {
     }
   }, [])
 
-  const handleCreateSession = (name: string, storeName: string, products: ProductReference[]) => {
+  const handleCreateSession = (name: string, store: Store | null, company: Company | null, products: ProductReference[]) => {
     const newSession: InventorySession = {
       id: uuidv4(),
       name,
-      storeName,
+      storeName: store?.name,
       status: 'planned',
       createdAt: Date.now(),
       products,
-      scans: []
+      scans: [],
+      ...(store
+        ? {
+            storeId: store.id,
+            storeAddress: store.address,
+            companyId: company?.id,
+            companyName: company?.name,
+          }
+        : {}),
     }
 
     setSessions(current => [...(current || []), newSession])
@@ -362,20 +381,32 @@ function App() {
                   <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight truncate">Мобильная инвентаризация</h1>
                   <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 hidden sm:block">Профессиональная инвентаризация стала проще</p>
                 </div>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="ml-2 shrink-0">
-                      <Info size={18} />
-                      <span className="hidden sm:inline ml-2">Как работает</span>
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[85vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle className="text-lg sm:text-2xl">Пошаговая инструкция</DialogTitle>
-                    </DialogHeader>
-                    <ProcessGuide />
-                  </DialogContent>
-                </Dialog>
+                <div className="flex items-center gap-2 ml-2 shrink-0">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Info size={18} />
+                        <span className="hidden sm:inline ml-2">Как работает</span>
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[85vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle className="text-lg sm:text-2xl">Пошаговая инструкция</DialogTitle>
+                      </DialogHeader>
+                      <ProcessGuide />
+                    </DialogContent>
+                  </Dialog>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setClearSessionsOpen(true)}
+                    disabled={!sessions || sessions.length === 0}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash size={18} />
+                    <span className="hidden sm:inline ml-2">Очистить все</span>
+                  </Button>
+                </div>
               </div>
               <Button onClick={() => setNewSessionOpen(true)} size="default" className="w-full sm:w-auto">
                 <Plus className="mr-2" size={20} />
@@ -449,6 +480,30 @@ function App() {
         onOpenChange={setOneCImportOpen}
         onConfirm={handleOneCImport}
       />
+
+      <AlertDialog open={clearSessionsOpen} onOpenChange={setClearSessionsOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Удалить все сессии?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Это действие нельзя отменить. Будут удалены все локально сохранённые сессии
+              ({sessions?.length ?? 0} шт.).
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Отмена</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                setSessions([])
+                toast.success('Все сессии удалены')
+              }}
+            >
+              Удалить все
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <ThemeDebugger />
       <Toaster />
