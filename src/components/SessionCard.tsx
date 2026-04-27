@@ -2,7 +2,7 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { Barcode, Users, Package, Buildings } from '@phosphor-icons/react'
+import { Barcode, Package, Buildings, MapPin } from '@phosphor-icons/react'
 import type { InventorySession, SessionStatus } from '@/lib/types'
 import { formatDate } from '@/lib/inventory'
 
@@ -46,6 +46,21 @@ export function SessionCard({ session, onView, onScan }: SessionCardProps) {
           {getStatusLabel(session.status)}
         </Badge>
       </div>
+
+      {session.storeId && (
+        <div className="flex items-start gap-1.5 text-xs text-primary bg-primary/8 rounded-md px-2 py-1.5 mb-3 sm:mb-4">
+          <Buildings size={13} className="shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <span className="font-medium truncate block">Объект: {session.storeName}</span>
+            {session.storeAddress && (
+              <div className="flex items-start gap-1 mt-0.5">
+                <MapPin size={11} className="shrink-0 mt-0.5 text-primary/70" />
+                <span className="text-primary/70 line-clamp-1">{session.storeAddress}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {session.importMeta && (
         <div className="flex items-center gap-1.5 text-xs text-primary bg-primary/8 rounded-md px-2 py-1.5 mb-3 sm:mb-4">

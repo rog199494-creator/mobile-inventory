@@ -11,8 +11,10 @@ import { NewSessionDialog } from '@/components/NewSessionDialog'
 import { OneCImportDialog } from '@/components/OneCImportDialog'
 import { ProcessGuide } from '@/components/ProcessGuide'
 import { StoresScreen } from '@/components/StoresScreen'
+import { StoreDetailScreen } from '@/components/StoreDetailScreen'
 import type { InventorySession, ProductReference, ScanRecord } from '@/lib/types'
 import type { OneCProduct } from '@/services/fileExchange'
+import type { Store, Company } from '@/types/api'
 import { toast } from 'sonner'
 import { v4 as uuidv4 } from 'uuid'
 import {
@@ -23,12 +25,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 
-type View = 'dashboard' | 'scanner' | 'analysis' | 'stores'
+type View = 'dashboard' | 'scanner' | 'analysis' | 'stores' | 'store-detail'
 
 function App() {
   const [sessions, setSessions] = useKV<InventorySession[]>('inventory-sessions', [])
   const [currentView, setCurrentView] = useState<View>('dashboard')
   const [selectedSession, setSelectedSession] = useState<InventorySession | null>(null)
+  const [selectedStore, setSelectedStore] = useState<Store | null>(null)
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
   const [newSessionOpen, setNewSessionOpen] = useState(false)
   const [oneCImportOpen, setOneCImportOpen] = useState(false)
   const [isOnline, setIsOnline] = useState(navigator.onLine)
@@ -216,7 +220,58 @@ function App() {
     }
   }
 
-  const filteredSessions = (sessions || []).filter(s => 
+  const handleSelectStore = (store: Store, company: Company) => {
+    setSelectedStore(store)
+    setSelectedCompany(company)
+    setCurrentView('store-detail')
+  }
+
+  const handleStartInventoryFromStore = (
+    source: 'file' | 'manual',
+    products: ProductReference[],
+    importMeta?: { warehouse?: string; productCount: number },
+  ) => {
+    if (!selectedStore || !selectedCompany) return
+
+    const date = new Date().toLocaleDateString('ru-RU')
+    const newSession: InventorySession = {
+      id: uuidv4(),
+      name: `Ревизия ${selectedStore.name} ${date}`,
+      storeName: selectedStore.name,
+      status: 'planned',
+      createdAt: Date.now(),
+      products,
+      scans: [],
+      storeId: selectedStore.id,
+      storeAddress: selectedStore.address,
+      companyId: selectedCompany.id,
+      companyName: selectedCompany.name,
+      source,
+      ...(importMeta
+        ? {
+            importMeta: {
+              warehouse: importMeta.warehouse,
+              importedAt: Date.now(),
+              productCount: importMeta.productCount,
+            },
+          }
+        : {}),
+    }
+
+    setSessions(current => [...(current || []), newSession])
+    toast.success(`Сессия создана для объекта «${selectedStore.name}»`)
+
+    setSelectedSession(newSession)
+    setCurrentView('scanner')
+  }
+
+  const handleBackFromStoreDetail = () => {
+    setCurrentView('stores')
+    setSelectedStore(null)
+    setSelectedCompany(null)
+  }
+
+  const filteredSessions = (sessions || []).filter(s =>
     statusFilter === 'all' || s.status === statusFilter
   )
 
@@ -237,8 +292,23 @@ function App() {
               </div>
             </div>
           </div>
-          <StoresScreen />
+          <StoresScreen onSelectStore={handleSelectStore} />
         </div>
+        <Toaster />
+      </>
+    )
+  }
+
+  if (currentView === 'store-detail' && selectedStore && selectedCompany) {
+    return (
+      <>
+        <StoreDetailScreen
+          store={selectedStore}
+          company={selectedCompany}
+          sessions={sessions || []}
+          onBack={handleBackFromStoreDetail}
+          onStartInventory={handleStartInventoryFromStore}
+        />
         <Toaster />
       </>
     )

@@ -35,6 +35,12 @@ export interface InventorySession {
   products: ProductReference[]
   scans: ScanRecord[]
   importMeta?: OneCImportMeta
+  // Store/object fields (populated when session is created from the Stores screen)
+  storeId?: string
+  storeAddress?: string
+  companyId?: string
+  companyName?: string
+  source?: 'file' | 'api' | 'manual'
 }
 
 export interface VarianceItem {
