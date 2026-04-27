@@ -4,8 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Separator } from '@/components/ui/separator'
-import { ArrowCounterClockwise, WifiHigh, Bug, MapPin, Buildings } from '@phosphor-icons/react'
-import { toast } from 'sonner'
+import { ArrowCounterClockwise, WifiHigh, Bug, MapPin, Buildings, CaretRight } from '@phosphor-icons/react'
 import { api } from '@/services/api'
 import { isInsideTelegram } from '@/services/telegram'
 import type { Company, Store, StoresResponse, PingResponse } from '@/types/api'
@@ -28,7 +27,11 @@ function groupStoresByCompany(
 // Component
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function StoresScreen() {
+interface StoresScreenProps {
+  onSelectStore: (store: Store, company: Company) => void
+}
+
+export function StoresScreen({ onSelectStore }: StoresScreenProps) {
   const [pingStatus, setPingStatus] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
   const [pingResult, setPingResult] = useState<PingResponse | null>(null)
 
@@ -49,7 +52,7 @@ export function StoresScreen() {
       setPingStatus('ok')
     } catch (err) {
       setPingStatus('error')
-      toast.error(`Ошибка соединения: ${(err as Error).message}`)
+      console.error('[StoresScreen] ping error:', (err as Error).message)
     }
   }
 
@@ -173,20 +176,19 @@ export function StoresScreen() {
                 {stores.map(store => (
                   <button
                     key={store.id}
-                    className="w-full text-left rounded-lg border bg-card p-3 hover:bg-accent transition-colors"
-                    onClick={() =>
-                      toast.info(`Объект ID: ${store.id}`, {
-                        description: 'В следующей версии здесь будет переход к ревизии склада.',
-                      })
-                    }
+                    className="w-full text-left rounded-lg border bg-card p-3 hover:bg-accent transition-colors flex items-start gap-2"
+                    onClick={() => onSelectStore(store, company)}
                   >
-                    <div className="font-medium text-sm">{store.name}</div>
-                    {store.address && (
-                      <div className="flex items-start gap-1 mt-1">
-                        <MapPin size={12} className="mt-0.5 shrink-0 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">{store.address}</span>
-                      </div>
-                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm">{store.name}</div>
+                      {store.address && (
+                        <div className="flex items-start gap-1 mt-1">
+                          <MapPin size={12} className="mt-0.5 shrink-0 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground">{store.address}</span>
+                        </div>
+                      )}
+                    </div>
+                    <CaretRight size={16} className="shrink-0 text-muted-foreground mt-0.5" />
                   </button>
                 ))}
               </div>
