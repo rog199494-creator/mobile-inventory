@@ -1,7 +1,7 @@
 /**
  * API-клиент для сервера клиента (minitest.bitrixabd.ru).
  *
- * - В dev-режиме запросы идут через Vite-прокси (/api/bitrix → minitest.bitrixabd.ru/api/bitrix)
+ * - В dev-режиме запросы идут через Vite-прокси (/bitrix → minitest.bitrixabd.ru/bitrix)
  * - В продакшене используется VITE_API_BASE_URL
  * - Авторизация: если запущено в Telegram — заголовок `Authorization: tma <initData>`,
  *   иначе — `X-Debug-User-Id` из VITE_DEBUG_USER_ID
@@ -24,8 +24,8 @@ import type {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const BASE_URL = import.meta.env.DEV
-  ? '/api/bitrix'
-  : (import.meta.env.VITE_API_BASE_URL ?? 'https://minitest.bitrixabd.ru/api/bitrix')
+  ? '/bitrix'
+  : (import.meta.env.VITE_API_BASE_URL ?? 'https://minitest.bitrixabd.ru/bitrix')
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Auth headers
