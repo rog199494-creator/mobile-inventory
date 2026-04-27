@@ -47,7 +47,12 @@ interface TelegramWebApp {
     link_color?: string
     button_color?: string
     button_text_color?: string
+    secondary_bg_color?: string
+    accent_text_color?: string
+    section_separator_color?: string
   }
+  onEvent(event: string, callback: () => void): void
+  offEvent(event: string, callback: () => void): void
 }
 
 interface Window {

@@ -8,7 +8,7 @@ A professional mobile inventory management system that transforms smartphones in
 ✅ **Excel/CSV Import** - Upload your expected inventory from spreadsheets
 ✅ **1С / SAP Integration** - File-based exchange with 1С Розница and SAP (CSV + XLSX, no network required)
 ✅ **Server Integration** - Connect to client's Bitrix24-integrated Node.js server
-✅ **Telegram Mini App** - Run inside Telegram with native UI and auth
+✅ **Telegram Mini App** - Run inside Telegram with native UI, auth, and automatic theme (light/dark) from `themeParams`
 ✅ **Mobile Scanner** - Scan barcodes and record quantities on any device
 ✅ **Offline Support** - Continue scanning even without internet connection
 ✅ **Real-time Progress** - Monitor scanning progress across multiple users
@@ -170,10 +170,22 @@ npm run dev
 Приложение поддерживает запуск внутри Telegram через `@ab_mini_test_bot`.
 
 - При запуске в Telegram автоматически применяется тема, приложение разворачивается на весь экран.
+- Цвета берутся из `tg.themeParams` — интерфейс автоматически переключается в тёмную тему, если Telegram работает в тёмном режиме.
 - Авторизация запросов к серверу — через стандартный заголовок `Authorization: tma <initData>`.
-- При запуске в браузере (разработка) — graceful fallback без ошибок.
+- При запуске в браузере (разработка) — graceful fallback без ошибок, системная тема определяется через `prefers-color-scheme`.
 
-Инструкция по настройке бота и валидации `initData` — в **[docs/TELEGRAM_MINIAPP.md](docs/TELEGRAM_MINIAPP.md)**.
+### Debug-панель тем (`npm run dev`)
+
+В режиме разработки в правом нижнем углу отображается панель **Light / Dark / Telegram** для быстрого переключения тем без перезагрузки.
+
+Также поддерживается query-параметр:
+```
+?theme=dark   → тёмная тема
+?theme=light  → светлая тема
+?theme=tg     → мок Telegram Desktop цветов
+```
+
+Инструкция по настройке бота и теме — в **[docs/TELEGRAM_MINIAPP.md](docs/TELEGRAM_MINIAPP.md)**.
 
 ## Technical Notes
 
