@@ -3,13 +3,15 @@ import { useKV } from '@github/spark/hooks'
 import { Toaster } from '@/components/ui/sonner'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Plus, Info } from '@phosphor-icons/react'
+import { Plus, Info, Upload } from '@phosphor-icons/react'
 import { SessionCard } from '@/components/SessionCard'
 import { ScannerInterface } from '@/components/ScannerInterface'
 import { VarianceAnalysis } from '@/components/VarianceAnalysis'
 import { NewSessionDialog } from '@/components/NewSessionDialog'
+import { OneCImportDialog } from '@/components/OneCImportDialog'
 import { ProcessGuide } from '@/components/ProcessGuide'
 import type { InventorySession, ProductReference, ScanRecord } from '@/lib/types'
+import type { OneCProduct } from '@/services/fileExchange'
 import { toast } from 'sonner'
 import { v4 as uuidv4 } from 'uuid'
 import {
@@ -27,6 +29,7 @@ function App() {
   const [currentView, setCurrentView] = useState<View>('dashboard')
   const [selectedSession, setSelectedSession] = useState<InventorySession | null>(null)
   const [newSessionOpen, setNewSessionOpen] = useState(false)
+  const [oneCImportOpen, setOneCImportOpen] = useState(false)
   const [isOnline, setIsOnline] = useState(navigator.onLine)
   const [pendingScans, setPendingScans] = useState(0)
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'planned' | 'completed'>('all')
@@ -68,6 +71,36 @@ function App() {
 
     setSessions(current => [...(current || []), newSession])
     toast.success('Сессия создана успешно')
+  }
+
+  const handleOneCImport = (products: OneCProduct[], warehouse?: string) => {
+    const productRefs: ProductReference[] = products.map(p => ({
+      barcode: p.barcode ?? p.sku,
+      name: p.name,
+      expectedQty: p.expectedQty,
+      price: p.price ?? 0,
+    }))
+
+    const warehouseName = warehouse ?? 'Склад'
+    const date = new Date().toLocaleDateString('ru-RU')
+
+    const newSession: InventorySession = {
+      id: uuidv4(),
+      name: `Ревизия ${warehouseName} ${date}`,
+      storeName: warehouseName,
+      status: 'planned',
+      createdAt: Date.now(),
+      products: productRefs,
+      scans: [],
+      importMeta: {
+        warehouse,
+        importedAt: Date.now(),
+        productCount: productRefs.length,
+      },
+    }
+
+    setSessions(current => [...(current || []), newSession])
+    toast.success(`Импортировано ${productRefs.length} позиций из 1С`)
   }
 
   const handleViewSession = (session: InventorySession) => {
@@ -249,6 +282,15 @@ function App() {
                 <Plus className="mr-2" size={20} />
                 Новая сессия
               </Button>
+              <Button
+                variant="outline"
+                onClick={() => setOneCImportOpen(true)}
+                size="default"
+                className="w-full sm:w-auto"
+              >
+                <Upload className="mr-2" size={20} />
+                Импорт из 1С
+              </Button>
             </div>
           </div>
         </div>
@@ -292,6 +334,12 @@ function App() {
         open={newSessionOpen}
         onOpenChange={setNewSessionOpen}
         onCreate={handleCreateSession}
+      />
+
+      <OneCImportDialog
+        open={oneCImportOpen}
+        onOpenChange={setOneCImportOpen}
+        onConfirm={handleOneCImport}
       />
 
       <Toaster />
