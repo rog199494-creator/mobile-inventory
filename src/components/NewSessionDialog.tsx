@@ -3,11 +3,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Upload, Storefront, MapPin, MagnifyingGlass, Check } from '@phosphor-icons/react'
+import { Upload, Storefront, MapPin, MagnifyingGlass, Check, Buildings, X } from '@phosphor-icons/react'
 import { parseExcelData } from '@/lib/inventory'
 import type { ProductReference } from '@/lib/types'
-import type { StoreData } from '@/lib/telegram'
-import { fetchStores } from '@/lib/telegram'
+import type { Store, Company, StoresResponse } from '@/types/api'
+import { api } from '@/services/api'
 import { toast } from 'sonner'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
@@ -15,22 +15,23 @@ import { cn } from '@/lib/utils'
 interface NewSessionDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onCreate: (name: string, storeName: string, products: ProductReference[]) => void
+  onCreate: (name: string, store: Store | null, company: Company | null, products: ProductReference[]) => void
 }
 
 export function NewSessionDialog({ open, onOpenChange, onCreate }: NewSessionDialogProps) {
   const [name, setName] = useState('')
-  const [selectedStore, setSelectedStore] = useState<StoreData | null>(null)
+  const [selectedStore, setSelectedStore] = useState<Store | null>(null)
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
   const [products, setProducts] = useState<ProductReference[]>([])
   const [fileName, setFileName] = useState('')
-  const [stores, setStores] = useState<StoreData[]>([])
+  const [storesData, setStoresData] = useState<StoresResponse | null>(null)
   const [isLoadingStores, setIsLoadingStores] = useState(false)
   const [showStoreList, setShowStoreList] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    if (open && stores.length === 0) {
+    if (open && !storesData) {
       loadStores()
     }
   }, [open])
@@ -38,27 +39,47 @@ export function NewSessionDialog({ open, onOpenChange, onCreate }: NewSessionDia
   const loadStores = async () => {
     setIsLoadingStores(true)
     try {
-      const data = await fetchStores()
-      setStores(data)
-      if (data.length === 0) {
-        toast.error('Не удалось загрузить список магазинов')
+      const data = await api.getStores()
+      setStoresData(data)
+      if (data.stores.length === 0) {
+        toast.error('Не удалось загрузить список объектов')
       }
     } catch (error) {
-      toast.error('Ошибка при загрузке магазинов')
+      toast.error('Ошибка при загрузке объектов')
     } finally {
       setIsLoadingStores(false)
     }
   }
 
-  const filteredStores = stores.filter(store => 
-    store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    store.address?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  // Group stores by company, filtering by search query
+  const groupedStores = (() => {
+    if (!storesData) return []
+    const q = searchQuery.toLowerCase()
+    return storesData.companies
+      .map(company => ({
+        company,
+        stores: storesData.stores.filter(
+          s =>
+            s.companyId === company.id &&
+            (q === '' ||
+              s.name.toLowerCase().includes(q) ||
+              (s.address?.toLowerCase().includes(q) ?? false) ||
+              company.name.toLowerCase().includes(q)),
+        ),
+      }))
+      .filter(g => g.stores.length > 0)
+  })()
 
-  const handleStoreSelect = (store: StoreData) => {
+  const handleStoreSelect = (store: Store, company: Company) => {
     setSelectedStore(store)
+    setSelectedCompany(company)
     setShowStoreList(false)
     setSearchQuery('')
+  }
+
+  const handleClearStore = () => {
+    setSelectedStore(null)
+    setSelectedCompany(null)
   }
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,19 +103,16 @@ export function NewSessionDialog({ open, onOpenChange, onCreate }: NewSessionDia
       toast.error('Введите название сессии')
       return
     }
-    if (!selectedStore) {
-      toast.error('Выберите магазин')
-      return
-    }
     if (products.length === 0) {
       toast.error('Загрузите список товаров')
       return
     }
 
-    onCreate(name, selectedStore.name, products)
-    
+    onCreate(name, selectedStore, selectedCompany, products)
+
     setName('')
     setSelectedStore(null)
+    setSelectedCompany(null)
     setProducts([])
     setFileName('')
     setSearchQuery('')
@@ -122,7 +140,10 @@ export function NewSessionDialog({ open, onOpenChange, onCreate }: NewSessionDia
             </div>
 
             <div>
-              <Label className="text-sm">Выбор магазина</Label>
+              <div className="flex items-center justify-between mb-1">
+                <Label className="text-sm">Выбор объекта</Label>
+                <span className="text-xs text-muted-foreground">Опционально</span>
+              </div>
               {!showStoreList ? (
                 <div className="mt-1.5 sm:mt-2 space-y-2">
                   {selectedStore ? (
@@ -135,28 +156,50 @@ export function NewSessionDialog({ open, onOpenChange, onCreate }: NewSessionDia
                             {selectedStore.address}
                           </div>
                         )}
+                        {selectedCompany && (
+                          <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                            <Buildings size={11} className="shrink-0" />
+                            {selectedCompany.name}
+                          </div>
+                        )}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setShowStoreList(true)}
-                        className="shrink-0 h-8"
-                      >
-                        Изменить
-                      </Button>
+                      <div className="flex flex-col gap-1 shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowStoreList(true)}
+                          className="h-8"
+                        >
+                          Изменить
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleClearStore}
+                          className="h-8 text-muted-foreground"
+                        >
+                          <X size={14} className="mr-1" />
+                          Убрать
+                        </Button>
+                      </div>
                     </div>
                   ) : (
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowStoreList(true)}
-                      className="w-full h-14 border-dashed"
-                      disabled={isLoadingStores}
-                    >
-                      <Storefront className="mr-2" size={20} />
-                      <span className="text-sm sm:text-base">
-                        {isLoadingStores ? 'Загрузка магазинов...' : 'Выбрать магазин'}
-                      </span>
-                    </Button>
+                    <div className="space-y-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowStoreList(true)}
+                        className="w-full h-14 border-dashed"
+                        disabled={isLoadingStores}
+                      >
+                        <Storefront className="mr-2" size={20} />
+                        <span className="text-sm sm:text-base">
+                          {isLoadingStores ? 'Загрузка объектов...' : 'Выбрать объект'}
+                        </span>
+                      </Button>
+                      <p className="text-xs text-muted-foreground text-center">
+                        Можно привязать сессию к объекту из Bitrix или пропустить
+                      </p>
+                    </div>
                   )}
                 </div>
               ) : (
@@ -166,53 +209,60 @@ export function NewSessionDialog({ open, onOpenChange, onCreate }: NewSessionDia
                     <Input
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Поиск магазина..."
+                      placeholder="Поиск объекта..."
                       className="pl-10 h-11 sm:h-10 text-base sm:text-sm"
                     />
                   </div>
-                  
+
                   <ScrollArea className="h-64 border rounded-md">
-                    {filteredStores.length === 0 ? (
+                    {groupedStores.length === 0 ? (
                       <div className="p-8 text-center text-sm text-muted-foreground">
-                        {searchQuery ? 'Магазины не найдены' : 'Нет доступных магазинов'}
+                        {searchQuery ? 'Объекты не найдены' : 'Нет доступных объектов'}
                       </div>
                     ) : (
                       <div className="p-1">
-                        {filteredStores.map((store) => (
-                          <button
-                            key={store.id}
-                            onClick={() => handleStoreSelect(store)}
-                            className={cn(
-                              "w-full flex items-start gap-3 p-3 rounded-md transition-colors text-left",
-                              "hover:bg-accent active:bg-accent/80",
-                              selectedStore?.id === store.id && "bg-primary/10"
-                            )}
-                          >
-                            <Storefront 
-                              size={20} 
-                              className={cn(
-                                "shrink-0 mt-0.5",
-                                selectedStore?.id === store.id ? "text-primary" : "text-muted-foreground"
-                              )} 
-                            />
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium text-sm truncate">{store.name}</div>
-                              {store.address && (
-                                <div className="flex items-start gap-1 text-xs text-muted-foreground mt-0.5">
-                                  <MapPin size={12} className="shrink-0 mt-0.5" />
-                                  <span className="line-clamp-2">{store.address}</span>
-                                </div>
-                              )}
+                        {groupedStores.map(({ company, stores }) => (
+                          <div key={company.id}>
+                            <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                              {company.name}
                             </div>
-                            {selectedStore?.id === store.id && (
-                              <Check size={20} className="text-primary shrink-0" />
-                            )}
-                          </button>
+                            {stores.map((store) => (
+                              <button
+                                key={store.id}
+                                onClick={() => handleStoreSelect(store, company)}
+                                className={cn(
+                                  "w-full flex items-start gap-3 p-3 rounded-md transition-colors text-left",
+                                  "hover:bg-accent active:bg-accent/80",
+                                  selectedStore?.id === store.id && "bg-primary/10"
+                                )}
+                              >
+                                <Storefront
+                                  size={20}
+                                  className={cn(
+                                    "shrink-0 mt-0.5",
+                                    selectedStore?.id === store.id ? "text-primary" : "text-muted-foreground"
+                                  )}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-medium text-sm truncate">{store.name}</div>
+                                  {store.address && (
+                                    <div className="flex items-start gap-1 text-xs text-muted-foreground mt-0.5">
+                                      <MapPin size={12} className="shrink-0 mt-0.5" />
+                                      <span className="line-clamp-2">{store.address}</span>
+                                    </div>
+                                  )}
+                                </div>
+                                {selectedStore?.id === store.id && (
+                                  <Check size={20} className="text-primary shrink-0" />
+                                )}
+                              </button>
+                            ))}
+                          </div>
                         ))}
                       </div>
                     )}
                   </ScrollArea>
-                  
+
                   <Button
                     variant="outline"
                     onClick={() => setShowStoreList(false)}
@@ -271,3 +321,4 @@ export function NewSessionDialog({ open, onOpenChange, onCreate }: NewSessionDia
     </Dialog>
   )
 }
+

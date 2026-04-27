@@ -142,7 +142,7 @@ export function generateExcelFile(session: InventorySession, variances: Variance
     ['Отчёт по инвентаризации'],
     [''],
     ['Название сессии:', session.name],
-    ['Магазин:', session.storeName],
+    ['Объект:', session.storeName ?? ''],
     ['Создана:', formatDate(session.createdAt)],
     ['Статус:', session.status === 'completed' ? 'Завершена' : session.status === 'active' ? 'Активна' : 'Запланирована'],
     ...(session.completedAt ? [['Завершена:', formatDate(session.completedAt)]] : []),

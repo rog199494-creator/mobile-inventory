@@ -27,7 +27,7 @@ export interface OneCImportMeta {
 export interface InventorySession {
   id: string
   name: string
-  storeName: string
+  storeName?: string
   status: SessionStatus
   createdAt: number
   startedAt?: number

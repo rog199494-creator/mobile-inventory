@@ -40,7 +40,11 @@ export function SessionCard({ session, onView, onScan }: SessionCardProps) {
       <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
         <div className="flex-1 min-w-0">
           <h3 className="text-base sm:text-lg font-semibold mb-1 truncate">{session.name}</h3>
-          <p className="text-xs sm:text-sm text-muted-foreground truncate">{session.storeName}</p>
+          {session.storeName ? (
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">{session.storeName}</p>
+          ) : (
+            <p className="text-xs sm:text-sm text-muted-foreground/60 truncate italic">Объект не указан</p>
+          )}
         </div>
         <Badge className={`${getStatusColor(session.status)} shrink-0 text-xs`}>
           {getStatusLabel(session.status)}
