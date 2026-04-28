@@ -131,12 +131,48 @@ export function applyTelegramTheme(): void {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Safe-area: компенсация статус-бара и шапки Telegram
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Вычисляет и устанавливает CSS-переменную `--safe-area-top` на `<html>`.
+ *
+ * Используются два источника:
+ * 1. `tg.safeAreaInset.top` — высота системного статус-бара.
+ * 2. `tg.contentSafeAreaInset.top` — высота Telegram-хрома (кнопки «Закрыть» и т.п.).
+ * Берётся сумма обоих. Если Telegram-клиент не отдаёт insets (старые версии),
+ * применяется платформенный fallback, чтобы контент не «наехал» на статус-бар.
+ */
+export function applySafeArea(): void {
+  const tgContentTop = tg?.contentSafeAreaInset?.top ?? 0
+  const tgSafeTop = tg?.safeAreaInset?.top ?? 0
+  const tgTotal = tgContentTop + tgSafeTop
+
+  const isTelegram = !!tg && tg.initData !== ''
+
+  // Платформенный fallback: когда старый клиент не отдаёт insets, используем
+  // разумные минимальные значения, чтобы контент был ниже Telegram-хрома.
+  const fallback = (() => {
+    if (!isTelegram) return 0
+    const platform = tg?.platform
+    if (platform === 'web' || platform === 'tdesktop') return 56   // только TG header
+    if (platform === 'ios') return 100                              // статус-бар + TG header
+    if (platform === 'android') return 80
+    return 100                                                      // неизвестная платформа
+  })()
+
+  const finalTop = Math.max(tgTotal, fallback)
+  document.documentElement.style.setProperty('--safe-area-top', `${finalTop}px`)
+}
+
 /**
  * Инициализирует Telegram WebApp:
  * - сообщает платформе, что приложение готово (`ready()`)
  * - разворачивает на весь экран (`expand()`)
  * - применяет системную тему через `tg.colorScheme` (в Telegram) или `prefers-color-scheme` (вне Telegram)
  * - подписывается на событие смены темы
+ * - вычисляет и обновляет safe-area-top при изменении viewport/insets
  */
 export function initTelegram(): void {
   if (tg) {
@@ -153,8 +189,14 @@ export function initTelegram(): void {
 
     applyCurrentTheme()
     tg.onEvent('themeChanged', applyCurrentTheme)
+
+    // Применяем safe-area сразу и подписываемся на события изменения
+    applySafeArea()
+    tg.onEvent('viewportChanged', applySafeArea)
+    tg.onEvent('safeAreaChanged', applySafeArea)
+    tg.onEvent('contentSafeAreaChanged', applySafeArea)
   } else {
-    // Вне Telegram — системная тема
+    // Вне Telegram — системная тема, safe-area-top = 0
     const mq = window.matchMedia('(prefers-color-scheme: dark)')
     setThemeAttributes(mq.matches ? 'dark' : 'light')
 

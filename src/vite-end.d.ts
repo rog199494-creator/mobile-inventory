@@ -2,6 +2,13 @@
 declare const GITHUB_RUNTIME_PERMANENT_NAME: string
 declare const BASE_KV_SERVICE_URL: string
 
+interface TgSafeAreaInset {
+  top: number
+  bottom: number
+  left: number
+  right: number
+}
+
 interface TelegramWebApp {
   ready: () => void
   expand: () => void
@@ -51,6 +58,14 @@ interface TelegramWebApp {
     accent_text_color?: string
     section_separator_color?: string
   }
+  /** System safe area insets (status bar, home indicator). Bot API 7.x+ */
+  safeAreaInset?: TgSafeAreaInset
+  /** Content safe area insets (Telegram header chrome). Bot API 8.0+ */
+  contentSafeAreaInset?: TgSafeAreaInset
+  /** Stable viewport height (excludes on-screen keyboard) */
+  viewportStableHeight?: number
+  /** Current viewport height */
+  viewportHeight?: number
   onEvent(event: string, callback: () => void): void
   offEvent(event: string, callback: () => void): void
 }

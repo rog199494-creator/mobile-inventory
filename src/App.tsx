@@ -12,6 +12,7 @@ import { OneCImportDialog } from '@/components/OneCImportDialog'
 import { ProcessGuide } from '@/components/ProcessGuide'
 import { StoresScreen } from '@/components/StoresScreen'
 import { StoreDetailScreen } from '@/components/StoreDetailScreen'
+import { SafeAreaDebug } from '@/components/SafeAreaDebug'
 import type { InventorySession, ProductReference, ScanRecord } from '@/lib/types'
 import type { OneCProduct } from '@/services/fileExchange'
 import type { Store, Company } from '@/types/api'
@@ -50,6 +51,8 @@ function App() {
   const [isOnline, setIsOnline] = useState(navigator.onLine)
   const [pendingScans, setPendingScans] = useState(0)
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'planned' | 'completed'>('all')
+
+  const showSafeAreaDebug = new URLSearchParams(window.location.search).get('debug') === 'safe-area'
 
   useEffect(() => {
     const handleOnline = () => {
@@ -330,7 +333,7 @@ function App() {
     return (
       <>
         <div className="min-h-screen bg-background pb-safe">
-          <div className="border-b bg-card sticky top-0 z-10 shadow-sm">
+          <div className="border-b bg-card sticky sticky-header z-10 shadow-sm">
             <div className="px-3 py-3 sm:px-4 sm:py-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
@@ -345,6 +348,7 @@ function App() {
           </div>
           <StoresScreen onSelectStore={handleSelectStore} />
         </div>
+        {showSafeAreaDebug && <SafeAreaDebug />}
         <Toaster />
       </>
     )
@@ -360,6 +364,7 @@ function App() {
           onBack={handleBackFromStoreDetail}
           onStartInventory={handleStartInventoryFromStore}
         />
+        {showSafeAreaDebug && <SafeAreaDebug />}
         <Toaster />
       </>
     )
@@ -379,6 +384,7 @@ function App() {
           onRestoreScan={handleRestoreScan}
           onUpdateScanQuantity={handleUpdateScanQuantity}
         />
+        {showSafeAreaDebug && <SafeAreaDebug />}
         <Toaster />
       </>
     )
@@ -393,6 +399,7 @@ function App() {
           onBack={handleBackToDashboard}
           onComplete={handleCompleteSession}
         />
+        {showSafeAreaDebug && <SafeAreaDebug />}
         <Toaster />
       </>
     )
@@ -401,7 +408,7 @@ function App() {
   return (
     <>
       <div className="min-h-screen bg-background pb-safe">
-        <div className="border-b bg-card sticky top-0 z-10 shadow-sm">
+        <div className="border-b bg-card sticky sticky-header z-10 shadow-sm">
           <div className="px-3 py-3 sm:px-4 sm:py-4">
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
@@ -534,6 +541,7 @@ function App() {
       </AlertDialog>
 
       <Toaster />
+      {showSafeAreaDebug && <SafeAreaDebug />}
     </>
   )
 }

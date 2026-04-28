@@ -76,7 +76,7 @@ export function StoreDetailScreen({
   return (
     <div className="min-h-screen bg-background pb-safe">
       {/* Header */}
-      <div className="border-b bg-card sticky top-0 z-10 shadow-sm">
+      <div className="border-b bg-card sticky sticky-header z-10 shadow-sm">
         <div className="px-3 py-3 sm:px-4 sm:py-4">
           <div className="flex items-center gap-3">
             {!inTelegram && (

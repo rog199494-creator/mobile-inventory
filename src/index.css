@@ -33,6 +33,21 @@
       padding-top: env(safe-area-inset-top);
     }
   }
+
+  /* ─── Telegram / device safe-area compensation ─── */
+  /*
+   * --safe-area-top is set by applySafeArea() in services/telegram.ts.
+   * In regular browsers (non-Telegram), it is not set, so the fallback
+   * env(safe-area-inset-top) handles iOS notch; on desktop it is 0.
+   */
+  #root {
+    padding-top: var(--safe-area-top, env(safe-area-inset-top, 0px));
+  }
+
+  /* Sticky headers must stick below the safe area, not at raw viewport top */
+  #root .sticky-header {
+    top: var(--safe-area-top, env(safe-area-inset-top, 0px));
+  }
 }
 
 :root {

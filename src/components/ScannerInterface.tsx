@@ -119,7 +119,7 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
     return (
       <div className="fixed inset-0 z-50 bg-background overflow-hidden">
         <div className="h-full flex flex-col">
-          <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b px-3 py-2 sm:px-4 sm:py-3 shadow-sm shrink-0">
+          <div className="sticky sticky-header z-10 bg-card/95 backdrop-blur-sm border-b px-3 py-2 sm:px-4 sm:py-3 shadow-sm shrink-0">
             <div className="flex items-center justify-between">
               <Button variant="outline" size="sm" onClick={() => setIsCameraActive(false)}>
                 <ArrowLeft className="mr-1 sm:mr-2" size={16} />
@@ -194,7 +194,7 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5 pb-safe">
-      <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b px-3 py-3 sm:px-4 sm:py-3 shadow-sm">
+      <div className="sticky sticky-header z-10 bg-card/95 backdrop-blur-sm border-b px-3 py-3 sm:px-4 sm:py-3 shadow-sm">
         <div className="flex items-center justify-between gap-2">
           <Button variant="outline" size="default" onClick={onBack} className="h-10 sm:h-9">
             <ArrowLeft className="mr-1 sm:mr-2" size={18} />
