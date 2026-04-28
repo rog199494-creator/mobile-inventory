@@ -34,6 +34,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: true,
       },
+      '/inventory': {
+        target: 'https://minitest.bitrixabd.ru',
+        changeOrigin: true,
+        secure: true,
+      },
     },
   },
 });

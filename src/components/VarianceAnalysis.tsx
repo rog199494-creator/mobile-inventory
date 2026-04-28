@@ -14,11 +14,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Download, TrendUp, TrendDown, Warning, CheckCircle, Lock, FileXls, FileCsv } from '@phosphor-icons/react'
+import { Download, TrendUp, TrendDown, Warning, CheckCircle, Lock, FileXls, FileCsv, TelegramLogo } from '@phosphor-icons/react'
 import type { InventorySession, VarianceItem } from '@/lib/types'
-import { calculateVariances, calculateSummary, generateExcelCSV, generateExcelFile, downloadCSV, formatNumber, formatCurrency, formatDate } from '@/lib/inventory'
+import { calculateVariances, calculateSummary, generateExcelCSV, generateExcelFile, buildExcelBlob, downloadCSV, formatNumber, formatCurrency, formatDate } from '@/lib/inventory'
 import { exportToCSV, exportToXLSX, downloadBlob } from '@/services/fileExchange'
 import type { RevisionResultRow } from '@/services/fileExchange'
+import { inventoryApi } from '@/services/api'
 import { toast } from 'sonner'
 
 interface VarianceAnalysisProps {
@@ -30,6 +31,7 @@ interface VarianceAnalysisProps {
 export function VarianceAnalysis({ session, onBack, onComplete }: VarianceAnalysisProps) {
   const [filter, setFilter] = useState<'all' | 'shortage' | 'surplus' | 'unknown'>('all')
   const [showCompleteDialog, setShowCompleteDialog] = useState(false)
+  const [isSendingToTelegram, setIsSendingToTelegram] = useState(false)
   
   const variances = useMemo(() => calculateVariances(session), [session])
   const summary = useMemo(() => calculateSummary(variances), [variances])
@@ -96,6 +98,19 @@ export function VarianceAnalysis({ session, onBack, onComplete }: VarianceAnalys
     }
   }
 
+  const handleSendToTelegram = async () => {
+    try {
+      setIsSendingToTelegram(true)
+      const blob = buildExcelBlob(session, variances)
+      await inventoryApi.exportToTelegram(session.name, blob)
+      toast.success('Отчёт отправлен в Telegram')
+    } catch (e) {
+      toast.error(`Не удалось отправить: ${(e as Error).message}`)
+    } finally {
+      setIsSendingToTelegram(false)
+    }
+  }
+
   const handleCompleteSession = () => {
     if (onComplete) {
       onComplete(session.id)
@@ -156,6 +171,21 @@ export function VarianceAnalysis({ session, onBack, onComplete }: VarianceAnalys
                 <span className="sm:hidden">Заверш.</span>
               </Button>
             )}
+            <Button
+              variant="outline"
+              size="default"
+              onClick={handleSendToTelegram}
+              disabled={isSendingToTelegram}
+              className="flex-1 sm:flex-none min-w-[120px] h-10 sm:h-9"
+            >
+              <TelegramLogo className="mr-1 sm:mr-2" size={18} />
+              <span className="hidden sm:inline">
+                {isSendingToTelegram ? 'Отправка...' : 'В Telegram'}
+              </span>
+              <span className="sm:hidden">
+                {isSendingToTelegram ? '...' : 'Telegram'}
+              </span>
+            </Button>
           </div>
         </div>
       </div>

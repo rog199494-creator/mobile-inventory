@@ -40,7 +40,7 @@ export interface InventorySession {
   storeAddress?: string
   companyId?: string
   companyName?: string
-  source?: 'file' | 'api' | 'manual'
+  source?: 'file' | 'api' | 'manual' | 'telegram'
 }
 
 export interface VarianceItem {
