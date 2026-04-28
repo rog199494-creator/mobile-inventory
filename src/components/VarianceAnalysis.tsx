@@ -124,7 +124,7 @@ export function VarianceAnalysis({ session, onBack, onComplete }: VarianceAnalys
 
   return (
     <div className="min-h-screen bg-background pb-safe">
-      <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b px-3 py-3 sm:px-4 sm:py-4 shadow-sm">
+      <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b px-3 py-3 sm:px-4 sm:py-4 shadow-sm sticky-header">
         <Button variant="outline" size="default" onClick={onBack} className="mb-3 h-10 sm:h-9">
           ← Назад
         </Button>

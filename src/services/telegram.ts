@@ -175,6 +175,41 @@ export function isInsideTelegram(): boolean {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Safe Area
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Вычисляет высоту «опасной» зоны сверху (статус-бар / Dynamic Island / чёлка)
+ * и выставляет CSS-переменную `--safe-area-top` на `:root`.
+ *
+ * В Telegram берём `contentSafeAreaInset.top + safeAreaInset.top`.
+ * Принудительный минимум 90 px, если TG-платформа определена — лучше
+ * чуть больше отступ, чем шапка под часами.
+ * Вне Telegram используем `env(safe-area-inset-top, 0px)` из CSS.
+ */
+export function applySafeArea(): void {
+  if (tg) {
+    const contentTop = (tg as any).contentSafeAreaInset?.top ?? 0
+    const safeTop = (tg as any).safeAreaInset?.top ?? 0
+    let total = Number(contentTop) + Number(safeTop)
+
+    // Принудительный минимум: если TG не отдал инсеты — берём 90px как запас
+    const platform: string | undefined = (tg as any).platform
+    if (platform && platform !== 'unknown' && total < 90) {
+      total = 90
+    }
+
+    document.documentElement.style.setProperty('--safe-area-top', `${total}px`)
+  } else {
+    // Вне Telegram: полагаемся на CSS env()
+    document.documentElement.style.setProperty(
+      '--safe-area-top',
+      'env(safe-area-inset-top, 0px)',
+    )
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // MainButton helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
