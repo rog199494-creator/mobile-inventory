@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Toaster } from '@/components/ui/sonner'
-import { ThemeDebugger } from '@/components/ThemeDebugger'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Plus, Info, Upload, Buildings, Trash } from '@phosphor-icons/react'
@@ -16,6 +15,7 @@ import { StoreDetailScreen } from '@/components/StoreDetailScreen'
 import type { InventorySession, ProductReference, ScanRecord } from '@/lib/types'
 import type { OneCProduct } from '@/services/fileExchange'
 import type { Store, Company } from '@/types/api'
+import { api } from '@/services/api'
 import { toast } from 'sonner'
 import { v4 as uuidv4 } from 'uuid'
 import {
@@ -73,6 +73,37 @@ function App() {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
     }
+  }, [])
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const storeIdParam = params.get('storeId')
+    if (!storeIdParam) return
+
+    let cancelled = false
+    ;(async () => {
+      try {
+        const data = await api.getStores()
+        if (cancelled) return
+        const store = data.stores.find(s => s.id === storeIdParam)
+        if (!store) {
+          toast.error(`Объект с id ${storeIdParam} не найден`)
+          return
+        }
+        const company = data.companies.find(c => c.id === store.companyId)
+        if (!company) {
+          toast.error('Компания для объекта не найдена')
+          return
+        }
+        setSelectedStore(store)
+        setSelectedCompany(company)
+        setCurrentView('store-detail')
+      } catch (error) {
+        toast.error(`Не удалось загрузить объект: ${(error as Error).message}`)
+      }
+    })()
+
+    return () => { cancelled = true }
   }, [])
 
   const handleCreateSession = (name: string, store: Store | null, company: Company | null, products: ProductReference[]) => {
@@ -314,7 +345,6 @@ function App() {
           </div>
           <StoresScreen onSelectStore={handleSelectStore} />
         </div>
-        <ThemeDebugger />
         <Toaster />
       </>
     )
@@ -349,7 +379,6 @@ function App() {
           onRestoreScan={handleRestoreScan}
           onUpdateScanQuantity={handleUpdateScanQuantity}
         />
-        <ThemeDebugger />
         <Toaster />
       </>
     )
@@ -364,7 +393,6 @@ function App() {
           onBack={handleBackToDashboard}
           onComplete={handleCompleteSession}
         />
-        <ThemeDebugger />
         <Toaster />
       </>
     )
@@ -505,7 +533,6 @@ function App() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <ThemeDebugger />
       <Toaster />
     </>
   )
