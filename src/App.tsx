@@ -3,11 +3,10 @@ import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { Toaster } from '@/components/ui/sonner'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Plus, Info, Upload, Buildings, Trash } from '@phosphor-icons/react'
+import { Plus, Info, Buildings, Trash } from '@phosphor-icons/react'
 import { SessionCard } from '@/components/SessionCard'
 import { ScannerInterface } from '@/components/ScannerInterface'
 import { VarianceAnalysis } from '@/components/VarianceAnalysis'
-import { NewSessionDialog } from '@/components/NewSessionDialog'
 import { OneCImportDialog } from '@/components/OneCImportDialog'
 import { ProcessGuide } from '@/components/ProcessGuide'
 import { StoresScreen } from '@/components/StoresScreen'
@@ -45,7 +44,6 @@ function App() {
   const [selectedSession, setSelectedSession] = useState<InventorySession | null>(null)
   const [selectedStore, setSelectedStore] = useState<Store | null>(null)
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
-  const [newSessionOpen, setNewSessionOpen] = useState(false)
   const [oneCImportOpen, setOneCImportOpen] = useState(false)
   const [clearSessionsOpen, setClearSessionsOpen] = useState(false)
   const [isOnline, setIsOnline] = useState(navigator.onLine)
@@ -102,14 +100,21 @@ function App() {
     return () => { cancelled = true }
   }, [])
 
-  const handleCreateSession = (name: string, store: Store | null, company: Company | null, products: ProductReference[]) => {
+  const handleOneCImport = (sessionName: string, products: OneCProduct[], warehouse?: string, store?: Store | null, company?: Company | null) => {
+    const productRefs: ProductReference[] = products.map(p => ({
+      barcode: p.barcode ?? p.sku,
+      name: p.name,
+      expectedQty: p.expectedQty,
+      price: p.price ?? 0,
+    }))
+
     const newSession: InventorySession = {
       id: uuidv4(),
-      name,
-      storeName: store?.name,
+      name: sessionName,
+      storeName: store?.name ?? warehouse,
       status: 'planned',
       createdAt: Date.now(),
-      products,
+      products: productRefs,
       scans: [],
       ...(store
         ? {
@@ -119,40 +124,23 @@ function App() {
             companyName: company?.name,
           }
         : {}),
+      ...(productRefs.length > 0
+        ? {
+            importMeta: {
+              warehouse,
+              importedAt: Date.now(),
+              productCount: productRefs.length,
+            },
+          }
+        : {}),
     }
 
     setSessions(current => [...(current || []), newSession])
-    toast.success('Сессия создана успешно')
-  }
-
-  const handleOneCImport = (products: OneCProduct[], warehouse?: string) => {
-    const productRefs: ProductReference[] = products.map(p => ({
-      barcode: p.barcode ?? p.sku,
-      name: p.name,
-      expectedQty: p.expectedQty,
-      price: p.price ?? 0,
-    }))
-
-    const warehouseName = warehouse ?? 'Склад'
-    const date = new Date().toLocaleDateString('ru-RU')
-
-    const newSession: InventorySession = {
-      id: uuidv4(),
-      name: `Ревизия ${warehouseName} ${date}`,
-      storeName: warehouseName,
-      status: 'planned',
-      createdAt: Date.now(),
-      products: productRefs,
-      scans: [],
-      importMeta: {
-        warehouse,
-        importedAt: Date.now(),
-        productCount: productRefs.length,
-      },
+    if (productRefs.length > 0) {
+      toast.success(`Импортировано ${productRefs.length} позиций из 1С`)
+    } else {
+      toast.success('Пустая сессия создана')
     }
-
-    setSessions(current => [...(current || []), newSession])
-    toast.success(`Импортировано ${productRefs.length} позиций из 1С`)
   }
 
   const handleViewSession = (session: InventorySession) => {
@@ -436,7 +424,7 @@ function App() {
                   </Button>
                 </div>
               </div>
-              <Button onClick={() => setNewSessionOpen(true)} size="default" className="w-full sm:w-auto">
+              <Button onClick={() => setOneCImportOpen(true)} size="default" className="w-full sm:w-auto">
                 <Plus className="mr-2" size={20} />
                 Новая сессия
               </Button>
@@ -448,15 +436,6 @@ function App() {
               >
                 <Buildings className="mr-2" size={20} />
                 Объекты
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setOneCImportOpen(true)}
-                size="default"
-                className="w-full sm:w-auto"
-              >
-                <Upload className="mr-2" size={20} />
-                Импорт из 1С
               </Button>
             </div>
           </div>
@@ -477,10 +456,6 @@ function App() {
               <div className="text-5xl sm:text-6xl mb-4">📦</div>
               <h3 className="text-xl sm:text-2xl font-semibold mb-2">Пока нет сессий</h3>
               <p className="text-sm sm:text-base text-muted-foreground mb-6">Создайте первую сессию инвентаризации для начала работы</p>
-              <Button onClick={() => setNewSessionOpen(true)} size="lg" className="w-full sm:w-auto">
-                <Plus className="mr-2" size={16} />
-                Создать сессию
-              </Button>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
@@ -496,12 +471,6 @@ function App() {
           )}
         </div>
       </div>
-
-      <NewSessionDialog
-        open={newSessionOpen}
-        onOpenChange={setNewSessionOpen}
-        onCreate={handleCreateSession}
-      />
 
       <OneCImportDialog
         open={oneCImportOpen}
