@@ -151,6 +151,14 @@ export function buildExcelBlob(session: InventorySession, variances: VarianceIte
   })
 }
 
+/**
+ * Builds a reusable XLSX Workbook object for the given session and variances.
+ * Shared by `generateExcelFile` (triggers download) and `buildExcelBlob` (returns Blob).
+ *
+ * @param session  - The inventory session to summarise.
+ * @param variances - Pre-calculated variance items for the session.
+ * @returns An XLSX WorkBook with two sheets: «Сводка» and «Детали».
+ */
 function buildExcelWorkbook(session: InventorySession, variances: VarianceItem[]) {
   const summary = calculateSummary(variances)
 

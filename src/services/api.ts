@@ -34,11 +34,14 @@ const BASE_URL = import.meta.env.DEV
  * In dev mode we use the Vite proxy prefix /inventory.
  * In production we strip the trailing /bitrix segment from BASE_URL
  * (or use an explicit VITE_SERVER_BASE_URL env var).
+ * Falls back to BASE_URL as-is if it doesn't end with /bitrix.
  */
 const SERVER_BASE_URL: string = import.meta.env.DEV
   ? '/inventory'
   : (import.meta.env.VITE_SERVER_BASE_URL as string | undefined)
-    ?? BASE_URL.replace(/\/bitrix\/?$/, '')
+    ?? (BASE_URL.match(/\/bitrix\/?$/)
+        ? BASE_URL.replace(/\/bitrix\/?$/, '')
+        : BASE_URL)
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Auth headers
