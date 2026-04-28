@@ -142,17 +142,17 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
   }
 
   const getScanBoxSize = () => {
-    const vw = window.innerWidth
+    const viewportWidth = window.innerWidth
     switch (scanMode) {
       case 'narrow':
         // Горизонтальная вытянутая рамка ~80% ширины, соотношение 3:1
-        return { width: Math.round(vw * 0.8), height: Math.round(vw * 0.8 / 3) }
+        return { width: Math.round(viewportWidth * 0.8), height: Math.round(viewportWidth * 0.8 / 3) }
       case 'wide':
         // Широкая рамка ~85% ширины, соотношение 16:9
-        return { width: Math.round(vw * 0.85), height: Math.round(vw * 0.85 * 9 / 16) }
+        return { width: Math.round(viewportWidth * 0.85), height: Math.round(viewportWidth * 0.85 * 9 / 16) }
       default:
         // Стандартная квадратная рамка ~60% ширины
-        return { width: Math.round(vw * 0.6), height: Math.round(vw * 0.6) }
+        return { width: Math.round(viewportWidth * 0.6), height: Math.round(viewportWidth * 0.6) }
     }
   }
 
@@ -364,20 +364,23 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
             <div className="flex items-center gap-2 mb-1.5 sm:mb-2">
               <label className="text-[10px] sm:text-xs font-medium text-foreground shrink-0">Режим:</label>
               <div className="flex flex-1 gap-0.5 rounded border bg-background/50 p-0.5">
-                {(['narrow', 'standard', 'wide'] as ScanMode[]).map((mode) => (
-                  <button
-                    key={mode}
-                    onClick={() => setScanMode(mode)}
-                    className={cn(
-                      'flex-1 text-[10px] sm:text-xs py-0.5 rounded transition-colors',
-                      scanMode === mode
-                        ? 'bg-primary text-primary-foreground font-medium'
-                        : 'text-muted-foreground hover:text-foreground'
-                    )}
-                  >
-                    {mode === 'narrow' ? 'Узкий' : mode === 'standard' ? 'Стандартный' : 'Широкий'}
-                  </button>
-                ))}
+                {(['narrow', 'standard', 'wide'] as ScanMode[]).map((mode) => {
+                  const modeLabels: Record<ScanMode, string> = { narrow: 'Узкий', standard: 'Стандартный', wide: 'Широкий' }
+                  return (
+                    <button
+                      key={mode}
+                      onClick={() => setScanMode(mode)}
+                      className={cn(
+                        'flex-1 text-[10px] sm:text-xs py-0.5 rounded transition-colors',
+                        scanMode === mode
+                          ? 'bg-primary text-primary-foreground font-medium'
+                          : 'text-muted-foreground hover:text-foreground'
+                      )}
+                    >
+                      {modeLabels[mode]}
+                    </button>
+                  )
+                })}
               </div>
             </div>
             
