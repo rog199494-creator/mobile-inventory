@@ -180,15 +180,15 @@ export function isInsideTelegram(): boolean {
 
 /**
  * Возвращает минимальный принудительный отступ сверху для текущей платформы Telegram.
- * iOS ≥ 160 px, Android ≥ 130 px, веб-клиенты ≥ 60 px, остальные ≥ 160 px.
+ * iOS ≥ 120 px, Android ≥ 95 px, веб-клиенты ≥ 50 px, остальные ≥ 120 px.
  */
 export function getSafeAreaFallback(): number {
   if (!tg) return 0
   const platform: string | undefined = (tg as any).platform
-  if (platform === 'web' || platform === 'tdesktop' || platform === 'weba' || platform === 'webk') return 60
-  if (platform === 'ios') return 160
-  if (platform === 'android') return 130
-  return 160
+  if (platform === 'web' || platform === 'tdesktop' || platform === 'weba' || platform === 'webk') return 50
+  if (platform === 'ios') return 120
+  if (platform === 'android') return 95
+  return 120
 }
 
 /**

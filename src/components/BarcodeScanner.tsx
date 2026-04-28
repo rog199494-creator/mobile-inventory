@@ -23,6 +23,11 @@ interface BarcodeScannerProps {
 type FlashlightMode = 'auto' | 'on' | 'off'
 type ScanMode = 'standard' | 'wide'
 
+const SCAN_BOX_SIZES: Record<ScanMode, { width: number; height: number }> = {
+  standard: { width: 180, height: 180 },
+  wide:     { width: 280, height: 140 },
+}
+
 export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerProps) {
   const [scanner, setScanner] = useState<Html5Qrcode | null>(null)
   const [isScanning, setIsScanning] = useState(false)
@@ -142,15 +147,7 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
   }
 
   const getScanBoxSize = () => {
-    const viewportWidth = window.innerWidth
-    switch (scanMode) {
-      case 'wide':
-        // Горизонтальная рамка ~40% ширины, соотношение 3:1 (высота = ширина / 3)
-        return { width: Math.round(viewportWidth * 0.4), height: Math.round(viewportWidth * 0.4 / 3) }
-      default:
-        // Стандартная квадратная рамка ~30% ширины
-        return { width: Math.round(viewportWidth * 0.3), height: Math.round(viewportWidth * 0.3) }
-    }
+    return SCAN_BOX_SIZES[scanMode]
   }
 
   const enableFlashlight = async () => {
@@ -196,7 +193,6 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
       const config = {
         fps: 30,
         qrbox: scanBox,
-        aspectRatio: scanMode === 'wide' ? 3.0 : 1.0,
         formatsToSupport: [
           0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16
         ],

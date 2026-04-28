@@ -119,8 +119,9 @@ export function ScannerInterface({ session, onScan, onBack, isOnline, pendingSca
     return (
       <div className="fixed inset-0 z-50 bg-background overflow-hidden">
         <div className="h-full flex flex-col">
-          <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b px-3 py-2 sm:px-4 sm:py-3 shadow-sm shrink-0 sticky-header">
-            <div className="flex items-center justify-between">
+          <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b shadow-sm shrink-0 sticky-header">
+            <div style={{ height: 'var(--safe-area-top)' }} aria-hidden="true" />
+            <div className="px-3 py-2 sm:px-4 sm:py-3 flex items-center justify-between">
               <Button variant="outline" size="sm" onClick={() => setIsCameraActive(false)}>
                 <ArrowLeft className="mr-1 sm:mr-2" size={16} />
                 Назад
