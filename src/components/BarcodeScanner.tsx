@@ -21,7 +21,7 @@ interface BarcodeScannerProps {
 }
 
 type FlashlightMode = 'auto' | 'on' | 'off'
-type ScanMode = 'narrow' | 'standard' | 'wide'
+type ScanMode = 'standard' | 'wide'
 
 export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerProps) {
   const [scanner, setScanner] = useState<Html5Qrcode | null>(null)
@@ -42,9 +42,9 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
   const scanCooldown = 1000
 
   useEffect(() => {
-    // Migrate legacy 'precise' value stored in localStorage to 'narrow'
-    if ((scanMode as string) === 'precise') {
-      setScanMode('narrow')
+    // Migrate legacy 'precise' and 'narrow' values stored in localStorage to 'standard'
+    if ((scanMode as string) === 'precise' || (scanMode as string) === 'narrow') {
+      setScanMode('standard')
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -144,15 +144,12 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
   const getScanBoxSize = () => {
     const viewportWidth = window.innerWidth
     switch (scanMode) {
-      case 'narrow':
-        // Горизонтальная вытянутая рамка ~80% ширины, соотношение 3:1
-        return { width: Math.round(viewportWidth * 0.8), height: Math.round(viewportWidth * 0.8 / 3) }
       case 'wide':
-        // Широкая рамка ~85% ширины, соотношение 16:9
-        return { width: Math.round(viewportWidth * 0.85), height: Math.round(viewportWidth * 0.85 * 9 / 16) }
+        // Горизонтальная рамка ~40% ширины, соотношение 3:1 (высота = ширина / 3)
+        return { width: Math.round(viewportWidth * 0.4), height: Math.round(viewportWidth * 0.4 / 3) }
       default:
-        // Стандартная квадратная рамка ~60% ширины
-        return { width: Math.round(viewportWidth * 0.6), height: Math.round(viewportWidth * 0.6) }
+        // Стандартная квадратная рамка ~30% ширины
+        return { width: Math.round(viewportWidth * 0.3), height: Math.round(viewportWidth * 0.3) }
     }
   }
 
@@ -199,7 +196,7 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
       const config = {
         fps: 30,
         qrbox: scanBox,
-        aspectRatio: scanMode === 'wide' ? 16 / 9 : scanMode === 'narrow' ? 3.0 : 1.0,
+        aspectRatio: scanMode === 'wide' ? 3.0 : 1.0,
         formatsToSupport: [
           0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16
         ],
@@ -364,8 +361,8 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
             <div className="flex items-center gap-2 mb-1.5 sm:mb-2">
               <label className="text-[10px] sm:text-xs font-medium text-foreground shrink-0">Режим:</label>
               <div className="flex flex-1 gap-0.5 rounded border bg-background/50 p-0.5">
-                {(['narrow', 'standard', 'wide'] as ScanMode[]).map((mode) => {
-                  const modeLabels: Record<ScanMode, string> = { narrow: 'Узкий', standard: 'Стандартный', wide: 'Широкий' }
+                {(['standard', 'wide'] as ScanMode[]).map((mode) => {
+                  const modeLabels: Record<ScanMode, string> = { standard: 'Стандартный', wide: 'Широкий' }
                   return (
                     <button
                       key={mode}

@@ -16,6 +16,9 @@ setTimeout(() => applySafeArea(), 1000)
 
 createRoot(document.getElementById('root')!).render(
   <ErrorBoundary FallbackComponent={ErrorFallback}>
-    <App />
-   </ErrorBoundary>
+    <>
+      <div id="safe-area-spacer" style={{ height: 'var(--safe-area-top)', flexShrink: 0 }} />
+      <App />
+    </>
+  </ErrorBoundary>
 )
