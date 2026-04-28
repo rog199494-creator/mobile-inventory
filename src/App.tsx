@@ -278,7 +278,7 @@ function App() {
   }
 
   const handleStartInventoryFromStore = (
-    source: 'file' | 'manual',
+    source: 'file' | 'manual' | 'telegram',
     products: ProductReference[],
     importMeta?: { warehouse?: string; productCount: number },
   ) => {

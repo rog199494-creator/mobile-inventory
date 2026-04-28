@@ -17,15 +17,31 @@ import type {
   OrderDetails,
   VersionResponse,
   PingResponse,
+  TelegramImport,
 } from '@/types/api'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Base URL
+// Base URLs
 // ─────────────────────────────────────────────────────────────────────────────
 
+/** Bitrix API base (all /bitrix/... endpoints) */
 const BASE_URL = import.meta.env.DEV
   ? '/bitrix'
   : (import.meta.env.VITE_API_BASE_URL ?? 'https://minitest.bitrixabd.ru/bitrix')
+
+/**
+ * Server root for /inventory/... endpoints.
+ * In dev mode we use the Vite proxy prefix /inventory.
+ * In production we strip the trailing /bitrix segment from BASE_URL
+ * (or use an explicit VITE_SERVER_BASE_URL env var).
+ * Falls back to BASE_URL as-is if it doesn't end with /bitrix.
+ */
+const SERVER_BASE_URL: string = import.meta.env.DEV
+  ? '/inventory'
+  : (import.meta.env.VITE_SERVER_BASE_URL as string | undefined)
+    ?? (BASE_URL.match(/\/bitrix\/?$/)
+        ? BASE_URL.replace(/\/bitrix\/?$/, '')
+        : BASE_URL)
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Auth headers
@@ -133,6 +149,112 @@ export const api = {
 
   /** GET /bitrix/ — health-check */
   ping: (): Promise<PingResponse> => request<PingResponse>('/'),
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Inventory / Telegram API
+// Эндпоинты на /inventory/... (не под /bitrix, отдельный префикс на сервере)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const inventoryApi = {
+  /**
+   * POST /inventory/export
+   * Отправляет XLSX-файл с результатами ревизии в чат пользователя через бота.
+   */
+  exportToTelegram: async (sessionName: string, xlsxBlob: Blob): Promise<{ messageId: number }> => {
+    const formData = new FormData()
+    formData.append('file', xlsxBlob, `${sessionName}.xlsx`)
+    formData.append('caption', `Результаты ревизии: ${sessionName}`)
+
+    const url = `${SERVER_BASE_URL}/inventory/export`
+    let response: Response
+    try {
+      response = await fetch(url, {
+        method: 'POST',
+        // Content-Type выставляет сам fetch для FormData
+        headers: { ...getAuthHeaders() },
+        body: formData,
+      })
+    } catch (networkError) {
+      throw new ApiRequestError(
+        `Сетевая ошибка при запросе ${url}: ${(networkError as Error).message}`,
+      )
+    }
+
+    if (!response.ok) {
+      throw new ApiRequestError(`Сервер вернул ${response.status}`, response.status)
+    }
+
+    let json: { success: boolean; data?: { messageId: number }; error?: string }
+    try {
+      json = await response.json()
+    } catch {
+      throw new ApiRequestError('Не удалось разобрать JSON-ответ от сервера')
+    }
+
+    if (!json.success) {
+      throw new ApiRequestError(json.error ?? 'Ошибка отправки в Telegram')
+    }
+
+    return json.data as { messageId: number }
+  },
+
+  /**
+   * GET /inventory/imports
+   * Возвращает список XLSX/CSV-файлов, ранее отправленных пользователем боту.
+   */
+  listImports: async (): Promise<TelegramImport[]> => {
+    const url = `${SERVER_BASE_URL}/inventory/imports`
+    let response: Response
+    try {
+      response = await fetch(url, {
+        headers: { Accept: 'application/json', ...getAuthHeaders() },
+      })
+    } catch (networkError) {
+      throw new ApiRequestError(
+        `Сетевая ошибка при запросе ${url}: ${(networkError as Error).message}`,
+      )
+    }
+
+    if (!response.ok) {
+      throw new ApiRequestError(`Сервер вернул ${response.status}`, response.status)
+    }
+
+    let json: { success: boolean; data?: TelegramImport[]; error?: string }
+    try {
+      json = await response.json()
+    } catch {
+      throw new ApiRequestError('Не удалось разобрать JSON-ответ от сервера')
+    }
+
+    if (!json.success) {
+      throw new ApiRequestError(json.error ?? 'Ошибка получения списка файлов')
+    }
+
+    return json.data ?? []
+  },
+
+  /**
+   * GET /inventory/imports/:fileId
+   * Скачивает содержимое файла (сервер отдаёт как stream).
+   */
+  downloadImport: async (fileId: string): Promise<Blob> => {
+    const url = `${SERVER_BASE_URL}/inventory/imports/${fileId}`
+    let response: Response
+    try {
+      response = await fetch(url, { headers: getAuthHeaders() })
+    } catch (networkError) {
+      throw new ApiRequestError(
+        `Сетевая ошибка при запросе ${url}: ${(networkError as Error).message}`,
+      )
+    }
+
+    if (!response.ok) {
+      throw new ApiRequestError(`Сервер вернул ${response.status}`, response.status)
+    }
+
+    return await response.blob()
+  },
 }
 
 export { ApiRequestError }

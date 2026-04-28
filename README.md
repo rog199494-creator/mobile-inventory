@@ -9,6 +9,7 @@ A professional mobile inventory management system that transforms smartphones in
 ✅ **1С / SAP Integration** - File-based exchange with 1С Розница and SAP (CSV + XLSX, no network required)
 ✅ **Server Integration** - Connect to client's Bitrix24-integrated Node.js server
 ✅ **Telegram Mini App** - Run inside Telegram with native UI, auth, and automatic theme (light/dark) from `themeParams`
+✅ **Telegram Bot Integration** - Two-way exchange with `@ab_mini_test_bot`: export reports to chat, import nomenclature files
 ✅ **Mobile Scanner** - Scan barcodes and record quantities on any device
 ✅ **Offline Support** - Continue scanning even without internet connection
 ✅ **Real-time Progress** - Monitor scanning progress across multiple users
@@ -198,3 +199,22 @@ For CSV format issues, ensure:
 - Commas separate columns (not semicolons)
 - No special characters in product names
 - Prices use decimal points (not commas)
+
+## Интеграция с Telegram-ботом
+
+Mini App поддерживает двустороннюю интеграцию с ботом `@ab_mini_test_bot`.
+Подробная документация для бэкенд-разработчика: [docs/SERVER_INTEGRATION.md](docs/SERVER_INTEGRATION.md).
+
+### Экспорт результатов ревизии
+
+1. Завершите сессию инвентаризации.
+2. Откройте «Подробнее» → нажмите кнопку **«В Telegram»**.
+3. XLSX-отчёт будет отправлен боту и появится в вашем чате с `@ab_mini_test_bot`.
+
+### Импорт номенклатуры из Telegram
+
+1. Отправьте боту `@ab_mini_test_bot` XLSX или CSV-файл с номенклатурой.
+2. При создании новой ревизии выберите **«Из Telegram (@ab_mini_test_bot)»**.
+3. В открывшемся диалоге появится список файлов, отправленных боту.
+4. Выберите нужный файл — он будет загружен и распарсен автоматически.
+

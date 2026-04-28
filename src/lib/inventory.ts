@@ -136,8 +136,32 @@ export function downloadCSV(content: string, filename: string) {
 }
 
 export function generateExcelFile(session: InventorySession, variances: VarianceItem[]): void {
+  const filename = `Инвентаризация_${session.name}_${new Date().toISOString().split('T')[0]}.xlsx`
+  XLSX.writeFile(buildExcelWorkbook(session, variances), filename)
+}
+
+/**
+ * Builds the Excel workbook for a session without triggering a download.
+ * Returns a Blob suitable for both local download and API upload.
+ */
+export function buildExcelBlob(session: InventorySession, variances: VarianceItem[]): Blob {
+  const buffer = XLSX.write(buildExcelWorkbook(session, variances), { bookType: 'xlsx', type: 'array' }) as ArrayBuffer
+  return new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  })
+}
+
+/**
+ * Builds a reusable XLSX Workbook object for the given session and variances.
+ * Shared by `generateExcelFile` (triggers download) and `buildExcelBlob` (returns Blob).
+ *
+ * @param session  - The inventory session to summarise.
+ * @param variances - Pre-calculated variance items for the session.
+ * @returns An XLSX WorkBook with two sheets: «Сводка» and «Детали».
+ */
+function buildExcelWorkbook(session: InventorySession, variances: VarianceItem[]) {
   const summary = calculateSummary(variances)
-  
+
   const summaryData = [
     ['Отчёт по инвентаризации'],
     [''],
@@ -190,8 +214,7 @@ export function generateExcelFile(session: InventorySession, variances: Variance
   XLSX.utils.book_append_sheet(wb, ws1, 'Сводка')
   XLSX.utils.book_append_sheet(wb, ws2, 'Детали')
 
-  const filename = `Инвентаризация_${session.name}_${new Date().toISOString().split('T')[0]}.xlsx`
-  XLSX.writeFile(wb, filename)
+  return wb
 }
 
 export function formatNumber(num: number): string {

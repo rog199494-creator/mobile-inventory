@@ -38,7 +38,7 @@ interface StoreDetailScreenProps {
   sessions: InventorySession[]
   onBack: () => void
   onStartInventory: (
-    source: 'file' | 'manual',
+    source: 'file' | 'manual' | 'telegram',
     products: ProductReference[],
     importMeta?: { warehouse?: string; productCount: number },
   ) => void
