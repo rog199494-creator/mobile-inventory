@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useKV } from '@github/spark/hooks'
+import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { Toaster } from '@/components/ui/sonner'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -12,6 +12,7 @@ import { OneCImportDialog } from '@/components/OneCImportDialog'
 import { ProcessGuide } from '@/components/ProcessGuide'
 import { StoresScreen } from '@/components/StoresScreen'
 import { StoreDetailScreen } from '@/components/StoreDetailScreen'
+import { SafeAreaDebug } from '@/components/SafeAreaDebug'
 import type { InventorySession, ProductReference, ScanRecord } from '@/lib/types'
 import type { OneCProduct } from '@/services/fileExchange'
 import type { Store, Company } from '@/types/api'
@@ -39,7 +40,7 @@ import {
 type View = 'dashboard' | 'scanner' | 'analysis' | 'stores' | 'store-detail'
 
 function App() {
-  const [sessions, setSessions] = useKV<InventorySession[]>('inventory-sessions', [])
+  const [sessions, setSessions] = useLocalStorage<InventorySession[]>('inventory-sessions', [])
   const [currentView, setCurrentView] = useState<View>('dashboard')
   const [selectedSession, setSelectedSession] = useState<InventorySession | null>(null)
   const [selectedStore, setSelectedStore] = useState<Store | null>(null)
@@ -63,11 +64,6 @@ function App() {
 
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
-
-    if (window.Telegram?.WebApp) {
-      window.Telegram.WebApp.ready()
-      window.Telegram.WebApp.expand()
-    }
 
     return () => {
       window.removeEventListener('online', handleOnline)
@@ -330,7 +326,7 @@ function App() {
     return (
       <>
         <div className="min-h-screen bg-background pb-safe">
-          <div className="border-b bg-card sticky top-0 z-10 shadow-sm">
+          <div className="border-b bg-card sticky top-0 z-10 shadow-sm sticky-header">
             <div className="px-3 py-3 sm:px-4 sm:py-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
@@ -345,6 +341,7 @@ function App() {
           </div>
           <StoresScreen onSelectStore={handleSelectStore} />
         </div>
+        <SafeAreaDebug />
         <Toaster />
       </>
     )
@@ -360,6 +357,7 @@ function App() {
           onBack={handleBackFromStoreDetail}
           onStartInventory={handleStartInventoryFromStore}
         />
+        <SafeAreaDebug />
         <Toaster />
       </>
     )
@@ -379,6 +377,7 @@ function App() {
           onRestoreScan={handleRestoreScan}
           onUpdateScanQuantity={handleUpdateScanQuantity}
         />
+        <SafeAreaDebug />
         <Toaster />
       </>
     )
@@ -393,6 +392,7 @@ function App() {
           onBack={handleBackToDashboard}
           onComplete={handleCompleteSession}
         />
+        <SafeAreaDebug />
         <Toaster />
       </>
     )
@@ -401,7 +401,7 @@ function App() {
   return (
     <>
       <div className="min-h-screen bg-background pb-safe">
-        <div className="border-b bg-card sticky top-0 z-10 shadow-sm">
+        <div className="border-b bg-card sticky top-0 z-10 shadow-sm sticky-header">
           <div className="px-3 py-3 sm:px-4 sm:py-4">
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
@@ -533,6 +533,7 @@ function App() {
         </AlertDialogContent>
       </AlertDialog>
 
+      <SafeAreaDebug />
       <Toaster />
     </>
   )

@@ -3,7 +3,7 @@ import { Html5Qrcode } from 'html5-qrcode'
 import { Button } from '@/components/ui/button'
 import { X, Lightbulb, LightbulbFilament, MagnifyingGlassMinus, MagnifyingGlassPlus } from '@phosphor-icons/react'
 import { toast } from 'sonner'
-import { useKV } from '@github/spark/hooks'
+import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { Slider } from '@/components/ui/slider'
 import {
   Select,
@@ -26,12 +26,12 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
   const [scanner, setScanner] = useState<Html5Qrcode | null>(null)
   const [isScanning, setIsScanning] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [flashlightMode, setFlashlightMode] = useKV<FlashlightMode>('flashlight-mode', 'auto')
+  const [flashlightMode, setFlashlightMode] = useLocalStorage<FlashlightMode>('flashlight-mode', 'auto')
   const [isFlashlightOn, setIsFlashlightOn] = useState(false)
   const [brightness, setBrightness] = useState(100)
   const [zoomLevel, setZoomLevel] = useState(2)
   const [maxZoom, setMaxZoom] = useState(3)
-  const [scanMode, setScanMode] = useKV<ScanMode>('scan-mode', 'standard')
+  const [scanMode, setScanMode] = useLocalStorage<ScanMode>('scan-mode', 'standard')
   const scannerRef = useRef<Html5Qrcode | null>(null)
   const videoTrackRef = useRef<MediaStreamTrack | null>(null)
   const elementId = 'barcode-scanner-view'
@@ -135,11 +135,11 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
   const getScanBoxSize = () => {
     switch (scanMode) {
       case 'wide':
-        return { width: 300, height: 200 }
+        return { width: 150, height: 100 }
       case 'precise':
-        return { width: 200, height: 150 }
+        return { width: 100, height: 75 }
       default:
-        return { width: 250, height: 250 }
+        return { width: 125, height: 125 }
     }
   }
 
