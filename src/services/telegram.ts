@@ -45,28 +45,6 @@ const THEME_OVERRIDE_VARS = [
   '--ring',
 ] as const
 
-/** Правдоподобные Telegram Desktop цвета для эмуляции вне Telegram */
-const TG_MOCK_COLORS = {
-  light: {
-    bg_color: '#ffffff',
-    text_color: '#000000',
-    secondary_bg_color: '#f1f1f1',
-    button_color: '#2481cc',
-    button_text_color: '#ffffff',
-    hint_color: '#707579',
-    link_color: '#2481cc',
-  },
-  dark: {
-    bg_color: '#17212b',
-    text_color: '#f5f5f5',
-    secondary_bg_color: '#232e3c',
-    button_color: '#5288c1',
-    button_text_color: '#ffffff',
-    hint_color: '#708499',
-    link_color: '#6ab3f3',
-  },
-} as const
-
 type TgColors = {
   bg_color?: string
   text_color?: string
@@ -137,17 +115,8 @@ export function clearTgThemeVars(): void {
 }
 
 /**
- * Эмулирует тему Telegram Desktop с правдоподобными цветами.
- * Полезно для разработки и тестирования вне Telegram.
- */
-export function applyMockTelegramTheme(scheme: 'light' | 'dark'): void {
-  setThemeAttributes(scheme)
-  applyTgVars(TG_MOCK_COLORS[scheme])
-}
-
-/**
  * Применяет тему из реального tg.themeParams (если в Telegram)
- * или мок-цвета (если вне Telegram).
+ * или системную тему (если вне Telegram).
  */
 export function applyTelegramTheme(): void {
   if (tg) {
@@ -158,7 +127,7 @@ export function applyTelegramTheme(): void {
     }
   } else {
     const systemScheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-    applyMockTelegramTheme(systemScheme)
+    setThemeAttributes(systemScheme)
   }
 }
 
@@ -166,37 +135,14 @@ export function applyTelegramTheme(): void {
  * Инициализирует Telegram WebApp:
  * - сообщает платформе, что приложение готово (`ready()`)
  * - разворачивает на весь экран (`expand()`)
- * - применяет цвета темы к CSS-переменным
+ * - применяет системную тему через `tg.colorScheme` (в Telegram) или `prefers-color-scheme` (вне Telegram)
  * - подписывается на событие смены темы
- * - поддерживает query-параметр `?theme=dark|light|tg`
  */
 export function initTelegram(): void {
-  // Query-параметр ?theme= имеет наивысший приоритет
-  const queryTheme = new URLSearchParams(window.location.search).get('theme') as
-    | 'light'
-    | 'dark'
-    | 'tg'
-    | null
-
   if (tg) {
     tg.ready()
     tg.expand()
-  }
 
-  if (queryTheme === 'tg') {
-    const systemScheme = window.matchMedia('(prefers-color-scheme: dark)').matches
-      ? 'dark'
-      : 'light'
-    applyMockTelegramTheme(systemScheme)
-    return
-  }
-
-  if (queryTheme === 'dark' || queryTheme === 'light') {
-    setThemeAttributes(queryTheme)
-    return
-  }
-
-  if (tg) {
     const applyCurrentTheme = () => {
       const scheme = tg.colorScheme ?? 'light'
       setThemeAttributes(scheme)
