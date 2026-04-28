@@ -11,7 +11,7 @@ export function useLocalStorage<T>(
   const [storedValue, setStoredValue] = useState<T | null>(() => {
     try {
       const item = localStorage.getItem(key)
-      return item !== null ? (JSON.parse(item) as T) : initialValue
+      return item !== null && item !== '' ? (JSON.parse(item) as T) : initialValue
     } catch {
       return initialValue
     }
