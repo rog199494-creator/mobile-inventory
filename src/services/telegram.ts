@@ -179,11 +179,24 @@ export function isInsideTelegram(): boolean {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
+ * Возвращает минимальный принудительный отступ сверху для текущей платформы Telegram.
+ * iOS ≥ 160 px, Android ≥ 130 px, веб-клиенты ≥ 60 px, остальные ≥ 160 px.
+ */
+export function getSafeAreaFallback(): number {
+  if (!tg) return 0
+  const platform: string | undefined = (tg as any).platform
+  if (platform === 'web' || platform === 'tdesktop' || platform === 'weba' || platform === 'webk') return 60
+  if (platform === 'ios') return 160
+  if (platform === 'android') return 130
+  return 160
+}
+
+/**
  * Вычисляет высоту «опасной» зоны сверху (статус-бар / Dynamic Island / чёлка)
  * и выставляет CSS-переменную `--safe-area-top` на `:root`.
  *
  * В Telegram берём `contentSafeAreaInset.top + safeAreaInset.top`.
- * Принудительный минимум: iOS ≥ 130 px, Android ≥ 110 px, остальные ≥ 130 px —
+ * Принудительный минимум: iOS ≥ 160 px, Android ≥ 130 px, остальные ≥ 160 px —
  * гарантирует, что заголовок не наедет на системную панель Telegram.
  * Вне Telegram используем `env(safe-area-inset-top, 0px)` из CSS.
  */
@@ -193,14 +206,7 @@ export function applySafeArea(): void {
     const safeTop = (tg as any).safeAreaInset?.top ?? 0
     const tgTotal = Number(contentTop) + Number(safeTop)
 
-    const platform: string | undefined = (tg as any).platform
-    const fallback = (() => {
-      if (platform === 'web' || platform === 'tdesktop' || platform === 'weba' || platform === 'webk') return 56
-      if (platform === 'ios') return 130
-      if (platform === 'android') return 110
-      return 130 // unknown, undefined или любая другая платформа — берём с запасом
-    })()
-
+    const fallback = getSafeAreaFallback()
     const finalTop = Math.max(tgTotal, fallback)
     document.documentElement.style.setProperty('--safe-area-top', `${finalTop}px`)
   } else {

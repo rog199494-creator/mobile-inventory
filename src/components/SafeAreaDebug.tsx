@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { tg } from '@/services/telegram'
+import { tg, getSafeAreaFallback } from '@/services/telegram'
 
 /**
  * Отладочный оверлей для диагностики safe-area значений.
@@ -15,12 +15,13 @@ export function SafeAreaDebug() {
     const update = () => {
       const rootStyle = getComputedStyle(document.documentElement)
       setData({
-        '--safe-area-top': rootStyle.getPropertyValue('--safe-area-top').trim() || '(not set)',
+        inTelegram: tg ? 'yes' : 'no',
+        platform: String((tg as any)?.platform ?? 'n/a'),
         'contentSafeAreaInset.top': String((tg as any)?.contentSafeAreaInset?.top ?? 'n/a'),
         'safeAreaInset.top': String((tg as any)?.safeAreaInset?.top ?? 'n/a'),
-        platform: String((tg as any)?.platform ?? 'n/a'),
+        fallback: `${getSafeAreaFallback()}px`,
+        'applied --safe-area-top': rootStyle.getPropertyValue('--safe-area-top').trim() || '(not set)',
         viewport: `${window.innerWidth}×${window.innerHeight}`,
-        inTelegram: tg ? 'yes' : 'no',
       })
     }
 
