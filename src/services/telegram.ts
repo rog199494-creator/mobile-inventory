@@ -183,23 +183,26 @@ export function isInsideTelegram(): boolean {
  * и выставляет CSS-переменную `--safe-area-top` на `:root`.
  *
  * В Telegram берём `contentSafeAreaInset.top + safeAreaInset.top`.
- * Принудительный минимум 90 px, если TG-платформа определена — лучше
- * чуть больше отступ, чем шапка под часами.
+ * Принудительный минимум: iOS ≥ 130 px, Android ≥ 110 px, остальные ≥ 130 px —
+ * гарантирует, что заголовок не наедет на системную панель Telegram.
  * Вне Telegram используем `env(safe-area-inset-top, 0px)` из CSS.
  */
 export function applySafeArea(): void {
   if (tg) {
     const contentTop = (tg as any).contentSafeAreaInset?.top ?? 0
     const safeTop = (tg as any).safeAreaInset?.top ?? 0
-    let total = Number(contentTop) + Number(safeTop)
+    const tgTotal = Number(contentTop) + Number(safeTop)
 
-    // Принудительный минимум: если TG не отдал инсеты — берём 90px как запас
     const platform: string | undefined = (tg as any).platform
-    if (platform && platform !== 'unknown' && total < 90) {
-      total = 90
-    }
+    const fallback = (() => {
+      if (platform === 'web' || platform === 'tdesktop' || platform === 'weba' || platform === 'webk') return 56
+      if (platform === 'ios') return 130
+      if (platform === 'android') return 110
+      return 130 // unknown, undefined или любая другая платформа — берём с запасом
+    })()
 
-    document.documentElement.style.setProperty('--safe-area-top', `${total}px`)
+    const finalTop = Math.max(tgTotal, fallback)
+    document.documentElement.style.setProperty('--safe-area-top', `${finalTop}px`)
   } else {
     // Вне Telegram: полагаемся на CSS env()
     document.documentElement.style.setProperty(

@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { cn } from '@/lib/utils'
 
 interface BarcodeScannerProps {
   onScan: (barcode: string) => void
@@ -20,7 +21,7 @@ interface BarcodeScannerProps {
 }
 
 type FlashlightMode = 'auto' | 'on' | 'off'
-type ScanMode = 'standard' | 'wide' | 'precise'
+type ScanMode = 'narrow' | 'standard' | 'wide'
 
 export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerProps) {
   const [scanner, setScanner] = useState<Html5Qrcode | null>(null)
@@ -39,6 +40,14 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
   const lastScanTime = useRef<number>(0)
   const lastScannedCode = useRef<string>('')
   const scanCooldown = 1000
+
+  useEffect(() => {
+    // Migrate legacy 'precise' value stored in localStorage to 'narrow'
+    if ((scanMode as string) === 'precise') {
+      setScanMode('narrow')
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (isActive && !scanner) {
@@ -133,13 +142,17 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
   }
 
   const getScanBoxSize = () => {
+    const vw = window.innerWidth
     switch (scanMode) {
+      case 'narrow':
+        // Горизонтальная вытянутая рамка ~80% ширины, соотношение 3:1
+        return { width: Math.round(vw * 0.8), height: Math.round(vw * 0.8 / 3) }
       case 'wide':
-        return { width: 150, height: 100 }
-      case 'precise':
-        return { width: 100, height: 75 }
+        // Широкая рамка ~85% ширины, соотношение 16:9
+        return { width: Math.round(vw * 0.85), height: Math.round(vw * 0.85 * 9 / 16) }
       default:
-        return { width: 125, height: 125 }
+        // Стандартная квадратная рамка ~60% ширины
+        return { width: Math.round(vw * 0.6), height: Math.round(vw * 0.6) }
     }
   }
 
@@ -186,7 +199,7 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
       const config = {
         fps: 30,
         qrbox: scanBox,
-        aspectRatio: scanMode === 'wide' ? 1.5 : 1.0,
+        aspectRatio: scanMode === 'wide' ? 16 / 9 : scanMode === 'narrow' ? 3.0 : 1.0,
         formatsToSupport: [
           0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16
         ],
@@ -349,17 +362,23 @@ export function BarcodeScanner({ onScan, isActive, onToggle }: BarcodeScannerPro
         <div className="absolute top-12 sm:top-14 left-2 right-2 z-10 flex items-center justify-between gap-2 pointer-events-auto">
           <div className="bg-background/90 backdrop-blur-sm rounded-lg px-2 py-1.5 sm:px-3 sm:py-2 w-full">
             <div className="flex items-center gap-2 mb-1.5 sm:mb-2">
-              <label className="text-[10px] sm:text-xs font-medium text-foreground">Режим:</label>
-              <Select value={scanMode} onValueChange={(v) => setScanMode(v as ScanMode)}>
-                <SelectTrigger className="h-6 sm:h-7 text-[10px] sm:text-xs border-0 bg-transparent focus:ring-0 flex-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="standard">Стандарт</SelectItem>
-                  <SelectItem value="wide">Широкий</SelectItem>
-                  <SelectItem value="precise">Точный</SelectItem>
-                </SelectContent>
-              </Select>
+              <label className="text-[10px] sm:text-xs font-medium text-foreground shrink-0">Режим:</label>
+              <div className="flex flex-1 gap-0.5 rounded border bg-background/50 p-0.5">
+                {(['narrow', 'standard', 'wide'] as ScanMode[]).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setScanMode(mode)}
+                    className={cn(
+                      'flex-1 text-[10px] sm:text-xs py-0.5 rounded transition-colors',
+                      scanMode === mode
+                        ? 'bg-primary text-primary-foreground font-medium'
+                        : 'text-muted-foreground hover:text-foreground'
+                    )}
+                  >
+                    {mode === 'narrow' ? 'Узкий' : mode === 'standard' ? 'Стандартный' : 'Широкий'}
+                  </button>
+                ))}
+              </div>
             </div>
             
             <div className="flex items-center gap-1.5 sm:gap-2">
